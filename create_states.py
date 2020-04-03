@@ -1,5 +1,4 @@
 import itertools
-from math import fabs
 
 
 def get_lots_of_fragments(amount_of_demands, fragments_in_class):
@@ -18,29 +17,31 @@ def can_achieve(current_state, state, a, b):
     difference1 = 0
     difference2 = 0
     # приход требования класса 1
-    if len(state[0]) - len(current_state[0]) == 1 and state[0][-1] == a and len(state[1]) - len(current_state[1]) == 0:
+    if len(state[0]) - len(current_state[0]) == 1 and state[0][-1] == a and len(state[1]) - len(current_state[1]) == 0 \
+            and current_state[1][:] == state[1][:]:
         difference1 += 1
     # приход требования класса 2
-    if len(state[1]) - len(current_state[1]) == 1 and state[1][-1] == b and len(state[0]) - len(current_state[0]) == 0:
+    if len(state[1]) - len(current_state[1]) == 1 and state[1][-1] == b and len(state[0]) - len(current_state[0]) == 0 \
+            and current_state[0][:] == state[0][:]:
         difference2 += 1
     # уход требования класса 1
     if len(current_state[0]) - len(state[0]) == 1 and current_state[1][:] == state[1][:]:
         if current_state[0][:-1] == state[0][:]:
-            difference1 += 1
+            difference1 += current_state[0][-1]
     # уход требования класса 2
     if len(current_state[1]) - len(state[1]) == 1 and current_state[0][:] == state[0][:]:
         if current_state[1][:-1] == state[1][:]:
-            difference2 += 1
+            difference2 += current_state[1][-1]
     # завершение обслуживания фргмента требований 1го класса
     if len(current_state[0]) == len(state[0]) and current_state[1][:] == state[1][:]:
         for i in range(len(state[0])):
             if current_state[0][i] - state[0][i] > 0:
-                difference1 += 1
+                difference1 += current_state[0][i] - state[0][i]
     # завершение обслуживания фргмента требований 2го класса
     if len(current_state[1]) == len(state[1]) and current_state[0][:] == state[0][:]:
         for i in range(len(state[1])):
             if current_state[1][i] - state[1][i] > 0:
-                difference2 += 1
+                difference2 += current_state[1][i] - state[1][i]
 
     return (difference1 + difference2) == 1
 
@@ -73,7 +74,10 @@ def main():
     for state in all_states:
         print(f"S{list(all_states).index(state)} =", state)
 
-    print(get_achievable_states(all_states, tuple(list(all_states)[0]), a, b))
+    print()
+    for state in all_states:
+        print(f"S{list(all_states).index(state)}:", state)
+        print(get_achievable_states(all_states, state, a, b))
 
 
 if __name__ == '__main__':
