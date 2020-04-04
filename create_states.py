@@ -1,11 +1,34 @@
 import itertools
+from pprint import pprint
 
 
 def get_lots_of_fragments(amount_of_demands, fragments_in_class):
     return set(itertools.combinations_with_replacement(range(1, fragments_in_class + 1), amount_of_demands))
 
 
-def get_achievable_states(all_states: set, current_state: tuple, a: int, b: int):
+def get_all_state_with_queues(all_state: set, queue_capacity: list, M, a, b):
+    all_state_with_queues = list()
+    queue_state = set(itertools.product([x for x in range(queue_capacity[0] + 1)],
+                                        [x for x in range(queue_capacity[1] + 1)]))
+
+    for q_state in queue_state:
+        for state in all_state:
+            if possible_state(q_state, state, M, a, b):
+                all_state_with_queues.append({q_state: state})
+
+    return all_state_with_queues
+
+
+def possible_state(q_state, state, M, a, b):
+    number_of_occupied = len(state[0]) * a + len(state[1]) * b
+    if q_state[0] and M - number_of_occupied >= a:
+        return False
+    if q_state[1] and M - number_of_occupied >= b:
+        return False
+    return True
+
+
+def get_achievable_states(all_states: list, current_state: map, a: int, b: int):
     achievable_states = set()
     for state in all_states:
         if can_achieve(current_state, state, a, b):
@@ -13,7 +36,7 @@ def get_achievable_states(all_states: set, current_state: tuple, a: int, b: int)
     return achievable_states
 
 
-def can_achieve(current_state, state, a, b):
+def can_achieve(current_state: map, state: map, a: int, b: int):
     difference1 = 0
     difference2 = 0
     # приход требования класса 1
@@ -59,6 +82,13 @@ def main():
     # максимальное число требований 2го класса, которое может быть на приборах
     y = M // b
 
+    # вместимость очереди 1го класса
+    q1 = 2
+    # вместимость очереди 2го класса
+    q2 = 2
+
+    queue_capacity = [q1, q2]
+
     for i in range(x + 1):
         for j in range(y + 1):
             # число фрагментов которое может находиться на обслуживании
@@ -66,18 +96,26 @@ def main():
             if M < z:
                 continue
 
-            print('i =', i, 'j =', j)
             X = sorted(get_lots_of_fragments(i, a))
             Y = sorted(get_lots_of_fragments(j, b))
             all_states.update(itertools.product(X, Y))
 
+    print("Состояния фрагментов на системах (не включая очереди):  ")
     for state in all_states:
         print(f"S{list(all_states).index(state)} =", state)
 
-    print()
-    for state in all_states:
-        print(f"S{list(all_states).index(state)}:", state)
-        print(get_achievable_states(all_states, state, a, b))
+    all_state_with_queues = get_all_state_with_queues(all_states, queue_capacity, M, a, b)
+    print("\nСостояния системы вместе с очередями:")
+
+    # pprint(all_state_with_queues)
+    count = 0
+    for state in all_state_with_queues:
+        print(f"S{count} =", state)
+        count += 1
+
+    # for state in all_state_with_queues:
+    #     print(f"Текущее состояние S{count}:", state)
+    #     pprint("Смежные состояния:", get_achievable_states(all_state_with_queues, state, a, b))
 
 
 if __name__ == '__main__':
