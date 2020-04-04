@@ -1,39 +1,128 @@
 import itertools
-from pprint import pprint
+
+empty_set_str = u"\u2205"
 
 
+def pretty_server_state(server_state):
+    elements = []
+    for s in server_state:
+        if len(s) == 0:
+            elements.append(empty_set_str)
+        else:
+            elements.append(str(s))
+    # склеиваем все вместе и заменяем скобки list на фигурные для множества
+    return '(' + \
+           ', '.join(elements).replace('(', '{').replace(',)', '}').replace(')', '}') \
+           + ')'
+
+
+def pretty_state(state):
+    queue_state = state[0]
+    server_state = state[1]
+    return '(' + str(queue_state) + ': ' + pretty_server_state(server_state) + ')'
+
+
+# не понимаю из названия предназначение функции
 def get_lots_of_fragments(amount_of_demands, fragments_in_class):
-    return set(itertools.combinations_with_replacement(range(1, fragments_in_class + 1), amount_of_demands))
+    return list(itertools.combinations_with_replacement(range(1, fragments_in_class + 1), amount_of_demands))
 
 
-def get_all_state_with_queues(all_state: set, queue_capacity: list, M, a, b):
-    all_state_with_queues = list()
-    queue_state = set(itertools.product([x for x in range(queue_capacity[0] + 1)],
-                                        [x for x in range(queue_capacity[1] + 1)]))
+def get_all_state_with_queues(server_states: set,
+                              queue_capacity: list,
+                              M, a, b):
+    states = []
+    # так симпатичнее
+    queue_states = set(itertools.product(range(queue_capacity[0] + 1), range(queue_capacity[0] + 1)))
 
-    for q_state in queue_state:
-        for state in all_state:
-            if possible_state(q_state, state, M, a, b):
-                all_state_with_queues.append({q_state: state})
+    for q_state in queue_states:
+        for server_state in server_states:
+            # вы же понимаете, что это не самый оптимальный метод генерации
+            # гененируется слишком много лишних состояний, которые потом фильтруем
+            # но пусть пока будет так
+            if is_possible_state(q_state, server_state, M, a, b):
+                # зачем тут был dict? для красоты вывода на консоль?
+                states.append((q_state, server_state))
+    return states
 
-    return all_state_with_queues
 
-
-def possible_state(q_state, state, M, a, b):
-    number_of_occupied = len(state[0]) * a + len(state[1]) * b
-    if q_state[0] and M - number_of_occupied >= a:
+def is_possible_state(q_state, state, M, a, b):
+    number_of_free_servers = number_of_free_servers_for_server_state(state, M, a, b)
+    if q_state[0] and number_of_free_servers >= a:
         return False
-    if q_state[1] and M - number_of_occupied >= b:
+    if q_state[1] and number_of_free_servers >= b:
         return False
     return True
 
 
-def get_achievable_states(all_states: list, current_state: map, a: int, b: int):
-    achievable_states = set()
-    for state in all_states:
-        if can_achieve(current_state, state, a, b):
-            achievable_states.add(state)
-    return achievable_states
+def get_achievable_states(current_state: tuple,
+                          M: int,
+                          a: int, b: int,
+                          queue_capacity: list):
+    print('#' * 100)
+    print('Рассмотрим состояние ' + pretty_state(current_state))
+    # не будем делать никаких проверок, это снова слишком долго
+    # быстрее построить эти состояние перебирая все события, которые могут произойти
+    # не стал разбивать на отдельные функции из-за необходимости таскать кучу параметров
+    # так как все парметры не в классе
+    capacity1 = queue_capacity[0]
+    capacity2 = queue_capacity[1]
+
+    # получаем различные характеристики состояния
+    q1 = current_state[0][0]
+    print('q1 = ', q1)
+    q2 = current_state[0][1]
+    print('q1 = ', q2)
+    server_state = current_state[1]
+    print('server_state = ', server_state)
+
+    number_of_free_servers = number_of_free_servers_for_server_state(server_state, M, a, b)
+    print("Число свободных приборов", number_of_free_servers)
+
+    # ПОСТУПЛЕНИЕ
+    # первый класс - поступление требований
+    # есть приборов не хватает, то идем в очередь, если размер очереди позволят
+    print("ПОСТУПЛЕНИЕ")
+    if q1 != capacity1:
+        # идем в очередь
+        if number_of_free_servers < a:
+            new_state = create_state(q1 + 1, q2, server_state[0], server_state[1])
+            print('Поступление требования первого класса в очередь  с какой-то интенсивностью и переход в стояние ',
+                  new_state, "  pretty-form = ", pretty_state(new_state))
+        # идем на приборы - добавление во множество новое требование - т.е. новое количество фрагментов
+        else:
+            updated_first_demands_tasks = server_state[0]
+            updated_first_demands_tasks = updated_first_demands_tasks + (a,)
+            new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
+            print('Поступление требования первого класса и немедленное начало его обслуживания'
+                  '  с какой-то интенсивностью и переход в стояние ',
+                  new_state, "  pretty-form = ", pretty_state(new_state))
+    else:
+        print("Очередь заполнена - требование потерялось")
+
+    # ЗАВЕРШЕНИЕ ОБСЛУЖИВАНИЯ
+    # первый класс - завершение обслуживания одного из фрагментов или даже целого требования
+    # на приборах есть несколько требований первого класса,
+    # в каждом требовании фрагменты, если на приборах
+    print('УХОД')
+    for number_of_lost_tasks_in_demand in server_state[0]:
+        # обнаружил требование первого класса, в нем активны tasks фрагментов
+        if number_of_lost_tasks_in_demand == 1:
+            print('Остался один фрагмент - нужно удалить все требование после того как фрагмент уйдет')
+        else:
+            print('Остался не единственный фрагмент - можно просто убрать один и уменьшить их число на единицу')
+
+    return
+
+
+def number_of_free_servers_for_server_state(server_state, M, a, b):
+    number = M - len(server_state[0]) * a + len(server_state[1]) * b
+    if number < 0:
+        raise Exception("Number of free servers for states < 0, it is not correct state")
+    return number
+
+
+def create_state(q1, q2, first_class, second_class):
+    return (q1, q2), (first_class, second_class)
 
 
 def can_achieve(current_state: map, state: map, a: int, b: int):
@@ -70,52 +159,62 @@ def can_achieve(current_state: map, state: map, a: int, b: int):
 
 
 def main():
-    all_states = set()
+    server_states = set()
     # число приборов
-    M = 3  # int(input("M = "))
+    M = 5  # int(input("M = "))
     # число фрагментов в 1м классе
     a = 2  # int(input("a = "))
     # число фрагментов во 2м классе
     b = 1  # int(input("b = "))
     # максимальное число требований 1го класса, которое может быть на приборах
     x = M // a
+    print('Максимальное число требований 1го класса = ', x)
     # максимальное число требований 2го класса, которое может быть на приборах
     y = M // b
+    print('Максимальное число требований 2го класса = ', y)
 
     # вместимость очереди 1го класса
-    q1 = 2
+    capacity1 = 2
     # вместимость очереди 2го класса
-    q2 = 2
+    capacity2 = 2
 
-    queue_capacity = [q1, q2]
+    lambda1 = 1
+    lambda2 = 2
+    mu = 3
 
+    queue_capacity = [capacity1, capacity2]
+
+    # следует вынести в отдельную функцию
     for i in range(x + 1):
         for j in range(y + 1):
-            # число фрагментов которое может находиться на обслуживании
-            z = a * i + b * j
-            if M < z:
+            # общее число фрагментов в системе
+            total_number_of_tasks = a * i + b * j
+            if M < total_number_of_tasks:
                 continue
-
             X = sorted(get_lots_of_fragments(i, a))
             Y = sorted(get_lots_of_fragments(j, b))
-            all_states.update(itertools.product(X, Y))
+            server_states.update(itertools.product(X, Y))
 
-    print("Состояния фрагментов на системах (не включая очереди):  ")
-    for state in all_states:
-        print(f"S{list(all_states).index(state)} =", state)
+    print("Состояния фрагментов на системах (не включая очереди): (вывожу в красивом и не очень виде, чтобы понимать"
+          "используемые структуры данных в состоянии "
+          "(кортеж или лист или что-то еще, всегда понимаю что и где лежит и по какому индексу могу найти)  ")
+    # Это слишком сложный вариант вывода
+    # for state in all_states:
+    #     print(f"S{list(all_states).index(state)} =", state)
 
-    all_state_with_queues = get_all_state_with_queues(all_states, queue_capacity, M, a, b)
+    # enumerate создает пары - номер и элемент чего-то
+    for state_id, state in enumerate(server_states):
+        print('S' + str(state_id), '= ', pretty_server_state(state), '|    \t', state)
+
+    states = get_all_state_with_queues(server_states, queue_capacity, M, a, b)
     print("\nСостояния системы вместе с очередями:")
 
     # pprint(all_state_with_queues)
-    count = 0
-    for state in all_state_with_queues:
-        print(f"S{count} =", state)
-        count += 1
+    for state_id, state in enumerate(states):
+        print('S' + str(state_id), '= ', pretty_state(state), '|    \t', state)
 
-    # for state in all_state_with_queues:
-    #     print(f"Текущее состояние S{count}:", state)
-    #     pprint("Смежные состояния:", get_achievable_states(all_state_with_queues, state, a, b))
+    for state in states:
+        get_achievable_states(state, M, a, b, queue_capacity)
 
 
 if __name__ == '__main__':
