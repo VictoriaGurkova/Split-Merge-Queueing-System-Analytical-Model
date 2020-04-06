@@ -101,6 +101,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1, q2, updated_second_demands_tasks, server_state[1])
             print(f'Поступление требования первого класса с интенсивностью {lambda1} и немедленное начало его '
                   'обслуживания и переход в состояние ', pretty_state(new_state))
+            states_and_rates[new_state] += lambda1
     else:
         print("Очередь заполнена - требование потерялось")
 
@@ -110,6 +111,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1, q2 + 1, server_state[0], server_state[1])
             print(f'Поступление требования второго класса в очередь с интенсивностью {lambda2} и переход в стояние ',
                   pretty_state(new_state))
+            states_and_rates[new_state] += lambda2
         # идем на приборы - добавление во множество новое требование - т.е. новое количество фрагментов
         else:
             updated_second_demands_tasks = server_state[1]
@@ -117,6 +119,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
             print(f'Поступление требования второго класса с интенсивностью {lambda2} и немедленное начало его '
                   ' обслуживания и переход в состояние ', pretty_state(new_state))
+            states_and_rates[new_state] += lambda2
     else:
         print("Очередь заполнена - требование потерялось")
 
@@ -134,6 +137,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(copy_q1, q2, tuple(updated_first_demands_tasks), server_state[1])
             print(f'Завершение обслуживания всего требования первого класса с интенсивностью {mu}',
                   'и переход в состояние ', pretty_state(new_state))
+            states_and_rates[new_state] += mu
 
         else:
             leave_intensity = mu * updated_first_demands_tasks[state_id]
@@ -141,6 +145,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1, q2, tuple(updated_first_demands_tasks), server_state[1])
             print(f'Завершение обслуживания фрагмента требования первого класса с интенсивностью {leave_intensity}',
                   'и переход в состояние ', pretty_state(new_state))
+            states_and_rates[new_state] += leave_intensity
 
     # 2й класс
     for state_id, number_of_lost_tasks_in_demand in enumerate(server_state[1]):
@@ -154,6 +159,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1, copy_q2, server_state[0], tuple(updated_second_demands_tasks))
             print(f'Завершение обслуживания всего требования второго класса с интенсивностью {mu}',
                   'и переход в состояние ', pretty_state(new_state))
+            states_and_rates[new_state] += mu
 
         else:
             leave_intensity = mu * updated_second_demands_tasks[state_id]
@@ -161,6 +167,7 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1, q2, server_state[0], tuple(updated_second_demands_tasks))
             print(f'Завершение обслуживания фрагмента требования второго класса с интенсивностью {leave_intensity}',
                   'и переход в состояние ', pretty_state(new_state))
+            states_and_rates[new_state] += leave_intensity
 
     return states_and_rates
 
