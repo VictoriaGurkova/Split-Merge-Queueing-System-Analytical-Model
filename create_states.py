@@ -1,4 +1,6 @@
 import itertools
+import numpy as np
+from collections import defaultdict
 
 empty_set_str = u"\u2205"
 
@@ -50,8 +52,12 @@ def is_possible_state(q_state, state, M, a, b):
     return True
 
 
+# возвращает словарь {состояние: интенсивность перехода}
 def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_capacity: list,
                           lambda1: float, lambda2: float, mu: float):
+    # лучше взять именно дефолтовый словарь,  а не обычный, пояснения в остальных комментариях
+    states_and_rates = defaultdict(float)
+
     print('#' * 100)
     print('Рассмотрим состояние ' + pretty_state(current_state))
 
@@ -79,6 +85,15 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             new_state = create_state(q1 + 1, q2, server_state[0], server_state[1])
             print(f'Поступление требования первого класса в очередь с интенсивностью {lambda1} и переход в стояние ',
                   pretty_state(new_state))
+            # плюсуем интенсивность, так как может быть такая ситуация, что мы перейдем  одно состояние (new_state)
+            # из-за нескольких
+            # событий (интесивности при это будут складываться),  а если мы будем каждый раз просто приравнивать,
+            # то потеряем часть интенсивностей
+            # также именно здесь проявляется удобство  defaultdict - если не было состояния,
+            # то дефолтовое значение будет
+            # равно нулю
+            # аналогичное добавление в словарь производим для всех событий
+            states_and_rates[new_state] += lambda1
         # идем на приборы - добавление во множество новое требование - т.е. новое количество фрагментов
         else:
             updated_second_demands_tasks = server_state[0]
@@ -147,7 +162,27 @@ def get_achievable_states(current_state: tuple, M: int, a: int, b: int, queue_ca
             print(f'Завершение обслуживания фрагмента требования второго класса с интенсивностью {leave_intensity}',
                   'и переход в состояние ', pretty_state(new_state))
 
-    return
+    return states_and_rates
+
+
+def create_generator(states: list,
+                     M: int, a: int, b: int, queue_capacity: list,
+                     lambda1: float, lambda2: float, mu: float):
+    n = len(states)
+    Q = np.zeros((n, n))
+    # проходим по каждому состоянию и смотрим на его смежные
+    for i, current_state in enumerate(states):
+        # давайте засунем это все уже в какой-ниюудь класс, такой длинный список переменных  = путь к ошибке
+        states_and_rates = get_achievable_states(current_state, M, a, b, queue_capacity, lambda1, lambda2, mu)
+        for state, rate in states_and_rates.items():
+            # текущее состояние имеет номер i, смотрим на номер j смежного состояния
+            j = states.index(state)
+            # снова делаем += а не просто равно, чтобы не перетереть результаты перехода
+            Q[i, j] += rate
+
+    # мы должны получить генератор цепи Маркова, по диагонали должна стоять сумма всех элементов с минусом
+    # нужно это дописать
+    return Q
 
 
 def number_of_free_servers_for_server_state(server_state, M, a, b):
@@ -164,7 +199,7 @@ def create_state(q1, q2, first_class, second_class):
 def main():
     server_states = set()
     # число приборов
-    M = 5  # int(input("M = "))
+    M = 3  # int(input("M = "))
     # число фрагментов в 1м классе
     a = 2  # int(input("a = "))
     # число фрагментов во 2м классе
@@ -198,9 +233,7 @@ def main():
             Y = sorted(get_lots_of_fragments(j, b))
             server_states.update(itertools.product(X, Y))
 
-    print("Состояния фрагментов на системах (не включая очереди): (вывожу в красивом и не очень виде, чтобы понимать"
-          "используемые структуры данных в состоянии "
-          "(кортеж или лист или что-то еще, всегда понимаю что и где лежит и по какому индексу могу найти)  ")
+    print("Состояния фрагментов на системах (не включая очереди):")
 
     # enumerate создает пары - номер и элемент чего-то
     for state_id, state in enumerate(server_states):
@@ -212,8 +245,13 @@ def main():
     for state_id, state in enumerate(states):
         print('S' + str(state_id), '= ', pretty_state(state))
 
-    for state in states:
-        get_achievable_states(state, M, a, b, queue_capacity, lambda1, lambda2, mu)
+    Q = create_generator(states, M, a, b, queue_capacity, lambda1, lambda2, mu)
+
+    print('Q = ', Q)
+    # нужно будет проверить кооректность заполнения матрицы,
+    # удобно скопировать в excel
+    # и применить условное форматирование
+    np.savetxt("Q.txt", Q, fmt='%0.0f')
 
 
 if __name__ == '__main__':
