@@ -43,10 +43,26 @@ class StateSpace:
         np.savetxt("Q.txt", Q, fmt='%0.0f')
 
         distr = expm(Q * 1000000000)[0]
+
+        average_queue1 = 0
+        average_queue2 = 0
+
         print('Стационарное распределение P_i:', distr)
         for i, p_i in enumerate(distr):
             print('P[', pretty_state(states[i]), '] =', p_i)
+            average_queue1 += states[i][0][0] * p_i
+            average_queue2 += states[i][0][1] * p_i
         print(sum(distr))
+
+        print('Average Queue 1 = ', average_queue1)
+        print('Average Queue 2 = ', average_queue2)
+
+        print('Average Waiting Time 1 = ', average_queue1 / _lambda1)
+        print('Average Waiting Time 2 = ', average_queue2 / _lambda2)
+
+
+
+
 
     def get_server_states(self):
         server_states = set()
