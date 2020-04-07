@@ -6,6 +6,7 @@ from functions import *
 
 from scipy.linalg import expm
 
+
 class StateSpace:
     def __init__(self, M, a, b, capacity1, capacity2, lambda1, lambda2, mu):
         self.M = M
@@ -41,9 +42,11 @@ class StateSpace:
         # и применить условное форматирование
         np.savetxt("Q.txt", Q, fmt='%0.0f')
 
-        pi = expm(Q * 1000000000)[0]
-        print('Стационарное распределение P_i:', pi)
-        print(sum(pi))
+        distr = expm(Q * 1000000000)[0]
+        print('Стационарное распределение P_i:', distr)
+        for i, p_i in enumerate(distr):
+            print('P[', pretty_state(states[i]), '] =', p_i)
+        print(sum(distr))
 
     def get_server_states(self):
         server_states = set()
@@ -106,7 +109,7 @@ class StateSpace:
             else:
                 updated_first_demands_tasks = server_state[0]
                 updated_first_demands_tasks += (self.a,)
-                new_state = create_state(q1, q2, sorted(updated_first_demands_tasks), server_state[1])
+                new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
                 print(f'Поступление требования первого класса с интенсивностью {self.lambda1} и немедленное начало его '
                       'обслуживания и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.lambda1
@@ -122,7 +125,7 @@ class StateSpace:
             else:
                 updated_second_demands_tasks = server_state[1]
                 updated_second_demands_tasks += (self.b,)
-                new_state = create_state(q1, q2, server_state[0], sorted(updated_second_demands_tasks))
+                new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
                 print(f'Поступление требования второго класса с интенсивностью {self.lambda2} и немедленное начало его '
                       ' обслуживания и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.lambda2
@@ -147,8 +150,7 @@ class StateSpace:
                         updated_second_demands_tasks += [self.b]
                         copy_q2 -= 1
                         copy_number_of_free_servers -= self.b
-                new_state = create_state(copy_q1, copy_q2, tuple(sorted(updated_first_demands_tasks)),
-                                         tuple(sorted(updated_second_demands_tasks)))
+                new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
                 print(f'Завершение обслуживания всего требования первого класса с интенсивностью {self.mu}',
                       'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.mu
@@ -156,7 +158,7 @@ class StateSpace:
             else:
                 leave_intensity = self.mu * updated_first_demands_tasks[state_id]
                 updated_first_demands_tasks[state_id] -= 1
-                new_state = create_state(q1, q2, tuple(updated_first_demands_tasks), server_state[1])
+                new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
                 print(f'Завершение обслуживания фрагмента требования первого класса с интенсивностью {leave_intensity}',
                       'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += leave_intensity
@@ -178,8 +180,7 @@ class StateSpace:
                         updated_first_demands_tasks += [self.a]
                         copy_q1 -= 1
                         copy_number_of_free_servers -= self.a
-                new_state = create_state(copy_q1, copy_q2, tuple(sorted(updated_first_demands_tasks)),
-                                         tuple(sorted(updated_second_demands_tasks)))
+                new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
                 print(f'Завершение обслуживания всего требования второго класса с интенсивностью {self.mu}',
                       'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.mu
@@ -187,7 +188,7 @@ class StateSpace:
             else:
                 leave_intensity = self.mu * updated_second_demands_tasks[state_id]
                 updated_second_demands_tasks[state_id] -= 1
-                new_state = create_state(q1, q2, server_state[0], tuple(updated_second_demands_tasks))
+                new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
                 print(f'Завершение обслуживания фрагмента требования второго класса с интенсивностью {leave_intensity}',
                       'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += leave_intensity

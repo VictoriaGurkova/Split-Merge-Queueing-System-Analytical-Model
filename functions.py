@@ -27,5 +27,5 @@ def get_lots_of_fragments(amount_of_demands, fragments_in_class):
 
 
 def create_state(q1, q2, first_class, second_class):
-    return (q1, q2), (first_class, second_class)
+    return (q1, q2), (tuple(sorted(first_class)), tuple(sorted(second_class)))
 
