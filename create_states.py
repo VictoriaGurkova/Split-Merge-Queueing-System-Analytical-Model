@@ -52,17 +52,13 @@ class StateSpace:
             print('P[', pretty_state(states[i]), '] =', p_i)
             average_queue1 += states[i][0][0] * p_i
             average_queue2 += states[i][0][1] * p_i
-        print(sum(distr))
+        print('Check distr sum: ', sum(distr))
 
         print('Average Queue 1 = ', average_queue1)
         print('Average Queue 2 = ', average_queue2)
 
-        print('Average Waiting Time 1 = ', average_queue1 / _lambda1)
-        print('Average Waiting Time 2 = ', average_queue2 / _lambda2)
-
-
-
-
+        print('Average Waiting Time 1 = ', average_queue1 / self.lambda1)
+        print('Average Waiting Time 2 = ', average_queue2 / self.lambda2)
 
     def get_server_states(self):
         server_states = set()
@@ -241,8 +237,8 @@ if __name__ == '__main__':
     _b = 2
     _capacity1 = 5
     _capacity2 = 5
-    _lambda1 = 1
-    _lambda2 = 2
+    _lambda1 = 1.5
+    _lambda2 = 1.5
     _mu = 3
 
     sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, _lambda1, _lambda2, _mu)
