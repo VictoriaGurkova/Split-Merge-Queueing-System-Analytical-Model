@@ -54,7 +54,8 @@ class StateSpace:
 
         average_demands_on_devices = 0
 
-        sum_stationary_probability_if_queues = 0
+        probability_of_failure1 = 0
+        probability_of_failure2 = 0
 
         print('Стационарное распределение P_i:', distr)
         for i, p_i in enumerate(distr):
@@ -77,17 +78,19 @@ class StateSpace:
             average_demands_on_devices += \
                 ((len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b) * p_i) / (self.a + self.b)
 
-            # попытка посчитать вероятность отказа
-            if states[i][0][0] != self.queue_capacity[0] and states[i][0][1] != self.queue_capacity[1]:
-                sum_stationary_probability_if_queues += p_i
+            # Вероятности отказа
+            if states[i][0][0] == self.queue_capacity[0]:
+                probability_of_failure1 += p_i
+            if states[i][0][1] == self.queue_capacity[1]:
+                probability_of_failure2 += p_i
 
         print(sum(distr))
 
-        # попытка посчитать вероятность отказа
-        probability_of_failure1 = self.lambda1 / (
-                    self.lambda1 + self.lambda2) * sum_stationary_probability_if_queues * average_free_servers
-        probability_of_failure2 = self.lambda2 / (
-                    self.lambda1 + self.lambda2) * sum_stationary_probability_if_queues * average_free_servers
+        p_first = self.lambda1 / (
+                self.lambda1 + self.lambda2)
+        p_second = 1 - p_first
+
+
 
         print('Expected Queue 1 = ', average_queue1)
         print('Expected Queue 2 = ', average_queue2)
@@ -307,9 +310,9 @@ if __name__ == '__main__':
     _M = 4
     _a = 3
     _b = 2
-    _capacity1 = 10
-    _capacity2 = 30
-    _lambda1 = 0.5
+    _capacity1 = 5
+    _capacity2 = 5
+    _lambda1 = 1
     _lambda2 = 1
     _mu = 3
 
