@@ -41,32 +41,89 @@ class StateSpace:
         # и применить условное форматирование
         np.savetxt("Q.txt", Q, fmt='%0.0f')
 
-        distr = expm(Q * 1000000000)[0]
+        distr = expm(Q * 100000000000)[0]
 
         average_queue1 = 0
         average_queue2 = 0
+
+        average_free_servers = 0
+        average_free_servers_if_queues_not_empty = 0
+
+        average_demands_on_devices1 = 0
+        average_demands_on_devices2 = 0
+
+        average_demands_on_devices = 0
+
+        sum_stationary_probability_if_queues = 0
 
         print('Стационарное распределение P_i:', distr)
         for i, p_i in enumerate(distr):
             print('P[', pretty_state(states[i]), '] =', p_i)
             average_queue1 += states[i][0][0] * p_i
             average_queue2 += states[i][0][1] * p_i
+            # м.о. числа свободных приборов в системе
+            average_free_servers += (self.M - (len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b)) * p_i
+
+            # м.о. числа свободных приборов в системе при условии, что хотябы одна очередь не пуста
+            if states[i][0][0] + states[i][0][1] != 0:
+                average_free_servers_if_queues_not_empty += \
+                    (self.M - (len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b)) * p_i
+
+            # м.о. числа требований на приборах для каждого класса
+            average_demands_on_devices1 += (len(states[i][1][0]) * self.a * p_i) / self.a
+            average_demands_on_devices2 += (len(states[i][1][1]) * self.b * p_i) / self.b
+
+            # м.о. числа требований на приборах для обоих классов
+            average_demands_on_devices += \
+                ((len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b) * p_i) / (self.a + self.b)
+
+            # попытка посчитать вероятность отказа
+            if states[i][0][0] != self.queue_capacity[0] and states[i][0][1] != self.queue_capacity[1]:
+                sum_stationary_probability_if_queues += p_i
+
         print(sum(distr))
+
+        # попытка посчитать вероятность отказа
+        probability_of_failure1 = self.lambda1 / (
+                    self.lambda1 + self.lambda2) * sum_stationary_probability_if_queues * average_free_servers
+        probability_of_failure2 = self.lambda2 / (
+                    self.lambda1 + self.lambda2) * sum_stationary_probability_if_queues * average_free_servers
 
         print('Expected Queue 1 = ', average_queue1)
         print('Expected Queue 2 = ', average_queue2)
+        print()
 
-        queue_waiting1 = average_queue1 / _lambda1
-        queue_waiting2 = average_queue2 / _lambda2
+        queue_waiting1 = average_queue1 / self.lambda1
+        queue_waiting2 = average_queue2 / self.lambda2
 
         print('Expected Waiting Time 1 = ', queue_waiting1)
         print('Expected Waiting Time 2 = ', queue_waiting2)
+        print()
 
-        RT1 = queue_waiting1 + harmonic_sum(_a) / _mu
-        RT2 = queue_waiting2 + harmonic_sum(_b) / _mu
+        RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
+        RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
 
         print('Expected Response Time 1 = ', RT1)
         print('Expected Response Time 2 = ', RT2)
+        print()
+
+        print('Expected free servers = ', average_free_servers)
+        print('Expected free servers if queues not empty = ', average_free_servers_if_queues_not_empty)
+        print()
+
+        print('Expected demands on devices 1 = ', average_demands_on_devices1)
+        print('Expected demands on devices 2 = ', average_demands_on_devices2)
+        print()
+
+        print('Expected demands on devices = ', average_demands_on_devices)
+        print()
+
+        print('Expected service demand 1 = ', harmonic_sum(self.a))
+        print('Expected service demand 2 = ', harmonic_sum(self.b))
+        print()
+
+        print('Probability of failure 1 = ', probability_of_failure1)
+        print('Probability of failure 2 = ', probability_of_failure2)
 
     def get_server_states(self):
         server_states = set()
