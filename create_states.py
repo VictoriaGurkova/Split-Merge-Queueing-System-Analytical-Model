@@ -90,8 +90,6 @@ class StateSpace:
                 self.lambda1 + self.lambda2)
         p_second = 1 - p_first
 
-
-
         print('Expected Queue 1 = ', average_queue1)
         print('Expected Queue 2 = ', average_queue2)
         print()
