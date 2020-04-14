@@ -4,6 +4,7 @@ import numpy as np
 from scipy.linalg import expm
 
 from functions import *
+from statistics import Stat
 
 
 class StateSpace:
@@ -105,7 +106,9 @@ class StateSpace:
         RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
 
         print('Expected Response Time 1 = ', RT1)
+        stat.response1.append(RT1)
         print('Expected Response Time 2 = ', RT2)
+        stat.response2.append(RT2)
         print()
 
         print('Expected free servers = ', average_free_servers)
@@ -124,7 +127,9 @@ class StateSpace:
         print()
 
         print('Probability of failure 1 = ', probability_of_failure1)
+        stat.probability_of_failure1.append(probability_of_failure1)
         print('Probability of failure 2 = ', probability_of_failure2)
+        stat.probability_of_failure2.append(probability_of_failure2)
 
     def get_server_states(self):
         server_states = set()
@@ -310,10 +315,15 @@ if __name__ == '__main__':
     _b = 2
     _capacity1 = 5
     _capacity2 = 5
-    _lambda1 = 1
     _lambda2 = 1
     _mu = 3
 
-    sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, _lambda1, _lambda2, _mu)
+    lambdas1 = [x for x in np.arange(0.1, 1.5, 0.05)]
 
-    sp.start()
+    stat = Stat(lambdas1)
+
+    for i in range(len(lambdas1)):
+        sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, lambdas1[i], _lambda2, _mu)
+        sp.start()
+
+    stat.show()
