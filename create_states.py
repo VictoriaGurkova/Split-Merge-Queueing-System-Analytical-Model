@@ -1,122 +1,321 @@
-import itertools
-from pprint import pprint
+from collections import defaultdict
+
+import numpy as np
+from scipy.linalg import expm
+
+from functions import *
 
 
-def get_lots_of_fragments(amount_of_demands, fragments_in_class):
-    return set(itertools.combinations_with_replacement(range(1, fragments_in_class + 1), amount_of_demands))
+class StateSpace:
+    def __init__(self, M, a, b, capacity1, capacity2, lambda1, lambda2, mu):
+        self.M = M
+        self.a = a
+        self.b = b
+        self.lambda1 = lambda1
+        self.lambda2 = lambda2
+        self.mu = mu
+        self.queue_capacity = [capacity1, capacity2]
+
+        self.x = M // a
+        print('Максимальное число требований 1го класса = ', self.x)
+        self.y = M // b
+        print('Максимальное число требований 2го класса = ', self.y)
+
+    def start(self):
+        server_states = self.get_server_states()
+        print("Состояния фрагментов на системах (не включая очереди):")
+        for state_id, state in enumerate(server_states):
+            print('S' + str(state_id), '= ', pretty_server_state(state))
+
+        states = self.get_all_state_with_queues(server_states)
+        print("\nСостояния системы вместе с очередями:")
+
+        for state_id, state in enumerate(states):
+            print('S' + str(state_id), '= ', pretty_state(state))
+
+        Q = self.create_generator(states)
+
+        print('Q = ', Q)
+        # нужно будет проверить кооректность заполнения матрицы,
+        # удобно скопировать в excel
+        # и применить условное форматирование
+        np.savetxt("Q.txt", Q, fmt='%0.0f')
+
+        distr = expm(Q * 100000000000)[0]
+
+        average_queue1 = 0
+        average_queue2 = 0
+
+        average_free_servers = 0
+        average_free_servers_if_queues_not_empty = 0
+
+        average_demands_on_devices1 = 0
+        average_demands_on_devices2 = 0
+
+        average_demands_on_devices = 0
+
+        probability_of_failure1 = 0
+        probability_of_failure2 = 0
+
+        print('Стационарное распределение P_i:', distr)
+        for i, p_i in enumerate(distr):
+            print('P[', pretty_state(states[i]), '] =', p_i)
+            average_queue1 += states[i][0][0] * p_i
+            average_queue2 += states[i][0][1] * p_i
+            # м.о. числа свободных приборов в системе
+            average_free_servers += (self.M - (len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b)) * p_i
+
+            # м.о. числа свободных приборов в системе при условии, что хотябы одна очередь не пуста
+            if states[i][0][0] + states[i][0][1] != 0:
+                average_free_servers_if_queues_not_empty += \
+                    (self.M - (len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b)) * p_i
+
+            # м.о. числа требований на приборах для каждого класса
+            average_demands_on_devices1 += (len(states[i][1][0]) * self.a * p_i) / self.a
+            average_demands_on_devices2 += (len(states[i][1][1]) * self.b * p_i) / self.b
+
+            # м.о. числа требований на приборах для обоих классов
+            average_demands_on_devices += \
+                ((len(states[i][1][0]) * self.a + len(states[i][1][1]) * self.b) * p_i) / (self.a + self.b)
+
+            # Вероятности отказа
+            if states[i][0][0] == self.queue_capacity[0]:
+                probability_of_failure1 += p_i
+            if states[i][0][1] == self.queue_capacity[1]:
+                probability_of_failure2 += p_i
+
+        print(sum(distr))
+
+        p_first = self.lambda1 / (
+                self.lambda1 + self.lambda2)
+        p_second = 1 - p_first
 
 
-def get_all_state_with_queues(all_state: set, queue_capacity: list, M, a, b):
-    all_state_with_queues = list()
-    queue_state = set(itertools.product([x for x in range(queue_capacity[0] + 1)],
-                                        [x for x in range(queue_capacity[1] + 1)]))
 
-    for q_state in queue_state:
-        for state in all_state:
-            if possible_state(q_state, state, M, a, b):
-                all_state_with_queues.append({q_state: state})
+        print('Expected Queue 1 = ', average_queue1)
+        print('Expected Queue 2 = ', average_queue2)
+        print()
 
-    return all_state_with_queues
+        queue_waiting1 = average_queue1 / self.lambda1
+        queue_waiting2 = average_queue2 / self.lambda2
 
+        print('Expected Waiting Time 1 = ', queue_waiting1)
+        print('Expected Waiting Time 2 = ', queue_waiting2)
+        print()
 
-def possible_state(q_state, state, M, a, b):
-    number_of_occupied = len(state[0]) * a + len(state[1]) * b
-    if q_state[0] and M - number_of_occupied >= a:
-        return False
-    if q_state[1] and M - number_of_occupied >= b:
-        return False
-    return True
+        RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
+        RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
 
+        print('Expected Response Time 1 = ', RT1)
+        print('Expected Response Time 2 = ', RT2)
+        print()
 
-def get_achievable_states(all_states: list, current_state: map, a: int, b: int):
-    achievable_states = set()
-    for state in all_states:
-        if can_achieve(current_state, state, a, b):
-            achievable_states.add(state)
-    return achievable_states
+        print('Expected free servers = ', average_free_servers)
+        print('Expected free servers if queues not empty = ', average_free_servers_if_queues_not_empty)
+        print()
 
+        print('Expected demands on devices 1 = ', average_demands_on_devices1)
+        print('Expected demands on devices 2 = ', average_demands_on_devices2)
+        print()
 
-def can_achieve(current_state: map, state: map, a: int, b: int):
-    difference1 = 0
-    difference2 = 0
-    # приход требования класса 1
-    if len(state[0]) - len(current_state[0]) == 1 and state[0][-1] == a and len(state[1]) - len(current_state[1]) == 0 \
-            and current_state[1][:] == state[1][:]:
-        difference1 += 1
-    # приход требования класса 2
-    if len(state[1]) - len(current_state[1]) == 1 and state[1][-1] == b and len(state[0]) - len(current_state[0]) == 0 \
-            and current_state[0][:] == state[0][:]:
-        difference2 += 1
-    # уход требования класса 1
-    if len(current_state[0]) - len(state[0]) == 1 and current_state[1][:] == state[1][:]:
-        if current_state[0][:-1] == state[0][:]:
-            difference1 += current_state[0][-1]
-    # уход требования класса 2
-    if len(current_state[1]) - len(state[1]) == 1 and current_state[0][:] == state[0][:]:
-        if current_state[1][:-1] == state[1][:]:
-            difference2 += current_state[1][-1]
-    # завершение обслуживания фргмента требований 1го класса
-    if len(current_state[0]) == len(state[0]) and current_state[1][:] == state[1][:]:
-        for i in range(len(state[0])):
-            if current_state[0][i] - state[0][i] > 0:
-                difference1 += current_state[0][i] - state[0][i]
-    # завершение обслуживания фргмента требований 2го класса
-    if len(current_state[1]) == len(state[1]) and current_state[0][:] == state[0][:]:
-        for i in range(len(state[1])):
-            if current_state[1][i] - state[1][i] > 0:
-                difference2 += current_state[1][i] - state[1][i]
+        print('Expected demands on devices = ', average_demands_on_devices)
+        print()
 
-    return (difference1 + difference2) == 1
+        print('Expected service demand 1 = ', harmonic_sum(self.a))
+        print('Expected service demand 2 = ', harmonic_sum(self.b))
+        print()
 
+        print('Probability of failure 1 = ', probability_of_failure1)
+        print('Probability of failure 2 = ', probability_of_failure2)
 
-def main():
-    all_states = set()
-    # число приборов
-    M = 3  # int(input("M = "))
-    # число фрагментов в 1м классе
-    a = 2  # int(input("a = "))
-    # число фрагментов во 2м классе
-    b = 1  # int(input("b = "))
-    # максимальное число требований 1го класса, которое может быть на приборах
-    x = M // a
-    # максимальное число требований 2го класса, которое может быть на приборах
-    y = M // b
+    def get_server_states(self):
+        server_states = set()
+        for i in range(self.x + 1):
+            for j in range(self.y + 1):
+                total_number_of_tasks = self.a * i + self.b * j
+                if self.M < total_number_of_tasks:
+                    continue
+                X = sorted(get_lots_of_fragments(i, self.a))
+                Y = sorted(get_lots_of_fragments(j, self.b))
+                server_states.update(itertools.product(X, Y))
+        return server_states
 
-    # вместимость очереди 1го класса
-    q1 = 2
-    # вместимость очереди 2го класса
-    q2 = 2
+    def get_all_state_with_queues(self, server_states: set):
+        states = []
+        queue_states = set(itertools.product(range(self.queue_capacity[0] + 1), range(self.queue_capacity[1] + 1)))
 
-    queue_capacity = [q1, q2]
+        for q_state in queue_states:
+            for server_state in server_states:
+                if self.is_possible_state(q_state, server_state):
+                    states.append((q_state, server_state))
+        return states
 
-    for i in range(x + 1):
-        for j in range(y + 1):
-            # число фрагментов которое может находиться на обслуживании
-            z = a * i + b * j
-            if M < z:
-                continue
+    def is_possible_state(self, q_state, state):
+        number_of_free_servers = self.number_of_free_servers_for_server_state(state)
+        if q_state[0] and number_of_free_servers >= self.a:
+            return False
+        if q_state[1] and number_of_free_servers >= self.b:
+            return False
+        return True
 
-            X = sorted(get_lots_of_fragments(i, a))
-            Y = sorted(get_lots_of_fragments(j, b))
-            all_states.update(itertools.product(X, Y))
+    # возвращает словарь {состояние: интенсивность перехода}
+    def get_achievable_states(self, current_state: tuple):
+        states_and_rates = defaultdict(float)
 
-    print("Состояния фрагментов на системах (не включая очереди):  ")
-    for state in all_states:
-        print(f"S{list(all_states).index(state)} =", state)
+        print('#' * 100)
+        print('Рассмотрим состояние ' + pretty_state(current_state))
 
-    all_state_with_queues = get_all_state_with_queues(all_states, queue_capacity, M, a, b)
-    print("\nСостояния системы вместе с очередями:")
+        capacity1 = self.queue_capacity[0]
+        capacity2 = self.queue_capacity[1]
 
-    # pprint(all_state_with_queues)
-    count = 0
-    for state in all_state_with_queues:
-        print(f"S{count} =", state)
-        count += 1
+        # получаем различные характеристики состояния
+        q1 = current_state[0][0]
+        print('q1 = ', q1)
+        q2 = current_state[0][1]
+        print('q2 = ', q2)
+        server_state = current_state[1]
+        print('server_state = ', server_state)
 
-    # for state in all_state_with_queues:
-    #     print(f"Текущее состояние S{count}:", state)
-    #     pprint("Смежные состояния:", get_achievable_states(all_state_with_queues, state, a, b))
+        number_of_free_servers = self.number_of_free_servers_for_server_state(server_state)
+        print("Число свободных приборов", number_of_free_servers)
+
+        print("ПОСТУПЛЕНИЕ")
+        if q1 != capacity1:
+            if number_of_free_servers < self.a:
+                new_state = create_state(q1 + 1, q2, server_state[0], server_state[1])
+                print(
+                    f'Поступление требования первого класса в очередь с интенсивностью {self.lambda1} и переход в стояние ',
+                    pretty_state(new_state))
+                states_and_rates[new_state] += self.lambda1
+            else:
+                updated_first_demands_tasks = server_state[0]
+                updated_first_demands_tasks += (self.a,)
+                new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
+                print(f'Поступление требования первого класса с интенсивностью {self.lambda1} и немедленное начало его '
+                      'обслуживания и переход в состояние ', pretty_state(new_state))
+                states_and_rates[new_state] += self.lambda1
+        else:
+            print("Очередь заполнена - требование потерялось")
+
+        if q2 != capacity2:
+            if number_of_free_servers < self.b:
+                new_state = create_state(q1, q2 + 1, server_state[0], server_state[1])
+                print(
+                    f'Поступление требования второго класса в очередь с интенсивностью {self.lambda2} и переход в стояние ',
+                    pretty_state(new_state))
+                states_and_rates[new_state] += self.lambda2
+            else:
+                updated_second_demands_tasks = server_state[1]
+                updated_second_demands_tasks += (self.b,)
+                new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
+                print(f'Поступление требования второго класса с интенсивностью {self.lambda2} и немедленное начало его '
+                      ' обслуживания и переход в состояние ', pretty_state(new_state))
+                states_and_rates[new_state] += self.lambda2
+        else:
+            print("Очередь заполнена - требование потерялось")
+
+        print('УХОД')
+        # 1й класс
+        for index, number_of_lost_tasks_in_demand in enumerate(server_state[0]):
+            updated_first_demands_tasks = list(server_state[0])
+            updated_second_demands_tasks = list(server_state[1])
+            copy_q1 = q1
+            copy_q2 = q2
+            copy_number_of_free_servers = number_of_free_servers
+            # требование уйдет полностью, если остался один фрагмент
+            if number_of_lost_tasks_in_demand == 1:
+                updated_first_demands_tasks.pop(index)
+                if q1:
+                    while copy_number_of_free_servers + self.a >= self.a and copy_q1:
+                        updated_first_demands_tasks += [self.a]
+                        copy_q1 -= 1
+                        copy_number_of_free_servers -= self.a
+                if q2:
+                    while copy_number_of_free_servers + self.a >= self.b and copy_q2:
+                        updated_second_demands_tasks += [self.b]
+                        copy_q2 -= 1
+                        copy_number_of_free_servers -= self.b
+                new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
+                print(f'Завершение обслуживания всего требования первого класса с интенсивностью {self.mu}',
+                      'и переход в состояние ', pretty_state(new_state))
+                states_and_rates[new_state] += self.mu
+
+            else:
+                leave_intensity = self.mu * number_of_lost_tasks_in_demand
+                updated_first_demands_tasks[index] -= 1
+                new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
+                print(f'Завершение обслуживания фрагмента требования первого класса с интенсивностью {leave_intensity}',
+                      'и переход в состояние ', pretty_state(new_state))
+                states_and_rates[new_state] += leave_intensity
+
+        # 2й класс
+        for index, number_of_lost_tasks_in_demand in enumerate(server_state[1]):
+            updated_first_demands_tasks = list(server_state[0])
+            updated_second_demands_tasks = list(server_state[1])
+            copy_q1 = q1
+            copy_q2 = q2
+            copy_number_of_free_servers = number_of_free_servers
+            if number_of_lost_tasks_in_demand == 1:
+                updated_second_demands_tasks.pop(index)
+                if q1:
+                    while copy_number_of_free_servers + self.b >= self.a and copy_q1:
+                        updated_first_demands_tasks += [self.a]
+                        copy_q1 -= 1
+                        copy_number_of_free_servers -= self.a
+                if q2:
+                    while copy_number_of_free_servers + self.b >= self.b and copy_q2:
+                        updated_second_demands_tasks += [self.b]
+                        copy_q2 -= 1
+                        copy_number_of_free_servers -= self.b
+                new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
+                print(f'Завершение обслуживания всего требования второго класса с интенсивностью {self.mu}',
+                      'и переход в состояние ', pretty_state(new_state))
+                states_and_rates[new_state] += self.mu
+
+            else:
+                leave_intensity = self.mu * number_of_lost_tasks_in_demand
+                updated_second_demands_tasks[index] -= 1
+                new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
+                print(f'Завершение обслуживания фрагмента требования второго класса с интенсивностью {leave_intensity}',
+                      'и переход в состояние ', pretty_state(new_state))
+                states_and_rates[new_state] += leave_intensity
+
+        return states_and_rates
+
+    def create_generator(self, states: list):
+        n = len(states)
+        Q = np.zeros((n, n))
+        # проходим по каждому состоянию и смотрим на его смежные
+        for i, current_state in enumerate(states):
+            states_and_rates = self.get_achievable_states(current_state)
+            for state, rate in states_and_rates.items():
+                # текущее состояние имеет номер i, смотрим на номер j смежного состояния
+                j = states.index(state)
+                # снова делаем += а не просто равно, чтобы не перетереть результаты перехода
+                Q[i, j] += rate
+
+        for i, row in enumerate(Q):
+            Q[i, i] = -sum(row)
+
+        return Q
+
+    def number_of_free_servers_for_server_state(self, server_state):
+        number = self.M - (len(server_state[0]) * self.a + len(server_state[1]) * self.b)
+        if number < 0:
+            raise Exception("Number of free servers for states < 0, it is not correct state")
+        return number
 
 
 if __name__ == '__main__':
-    main()
+    _M = 4
+    _a = 3
+    _b = 2
+    _capacity1 = 5
+    _capacity2 = 5
+    _lambda1 = 1
+    _lambda2 = 1
+    _mu = 3
+
+    sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, _lambda1, _lambda2, _mu)
+
+    sp.start()
