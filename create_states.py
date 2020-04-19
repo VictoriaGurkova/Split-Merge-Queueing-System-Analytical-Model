@@ -233,11 +233,13 @@ class StateSpace:
                         updated_first_demands_tasks += [self.a]
                         copy_q1 -= 1
                         copy_number_of_free_servers -= self.a
+
                 if q2:
                     while copy_number_of_free_servers + self.a >= self.b and copy_q2:
                         updated_second_demands_tasks += [self.b]
                         copy_q2 -= 1
                         copy_number_of_free_servers -= self.b
+
                 new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
                 print(f'Завершение обслуживания всего требования первого класса с интенсивностью {self.mu}',
                       'и переход в состояние ', pretty_state(new_state))
@@ -265,6 +267,7 @@ class StateSpace:
                         updated_first_demands_tasks += [self.a]
                         copy_q1 -= 1
                         copy_number_of_free_servers -= self.a
+
                 if q2:
                     while copy_number_of_free_servers + self.b >= self.b and copy_q2:
                         updated_second_demands_tasks += [self.b]
@@ -315,15 +318,27 @@ if __name__ == '__main__':
     _b = 2
     _capacity1 = 5
     _capacity2 = 5
+    _lambda1 = 1
     _lambda2 = 1
     _mu = 3
 
-    lambdas1 = [x for x in np.arange(0.1, 1.5, 0.05)]
+    lambdas1 = [x for x in np.arange(0.1, 2.05, 0.05)]
+    lambdas2 = [x for x in np.arange(0.1, 2.05, 0.05)]
 
     stat = Stat(lambdas1)
 
-    for i in range(len(lambdas1)):
-        sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, lambdas1[i], _lambda2, _mu)
+    for lambda1 in lambdas1:
+        sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, lambda1, _lambda2, _mu)
         sp.start()
 
-    stat.show()
+    stat.save_RT('lambda1_q1.csv')
+
+    stat.clear()
+    stat = Stat(lambdas2)
+
+    for lambda2 in lambdas2:
+        sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, _lambda1, lambda2, _mu)
+        sp.start()
+
+    print('#' * 100)
+    stat.save_RT('lambda2_q1.csv')
