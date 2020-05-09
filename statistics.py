@@ -20,6 +20,11 @@ class Stat:
         for i in range(len(self.lambdas)):
             print(self.lambdas[i], self.probability_of_failure1[i], self.probability_of_failure2[i])
 
+    def show(self):
+        for i in range(len(self.lambdas)):
+            print(self.lambdas[i], self.response1[i], self.response2[i],
+                  self.probability_of_failure1[i], self.probability_of_failure2[i])
+
     def clear(self):
         self.response1.clear()
         self.response2.clear()
