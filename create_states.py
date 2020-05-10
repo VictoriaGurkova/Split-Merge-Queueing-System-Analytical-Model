@@ -2,9 +2,8 @@ from collections import defaultdict
 
 import numpy as np
 from scipy.linalg import expm
-
+import matplotlib.pyplot as plt
 from functions import *
-from statistics import Stat
 
 
 class StateSpace:
@@ -18,25 +17,42 @@ class StateSpace:
         self.queue_capacity = [capacity1, capacity2]
 
         self.x = M // a
-        print('Максимальное число требований 1го класса = ', self.x)
+        # print('Максимальное число требований 1го класса = ', self.x)
         self.y = M // b
-        print('Максимальное число требований 2го класса = ', self.y)
+        # print('Максимальное число требований 2го класса = ', self.y)
+
+        # м.о. длит. пребывания (общее)
+        self.RT = None
+        # м.о. длит. пребывания треб. 1-класса
+        self.RT1 = None
+        # м.о. длит. пребывания треб. 2-класса
+        self.RT2 = None
+        # вероятность отказа (общаяя)
+        self.PF = None
+        # вероятность отказа треб. 1-класса
+        self.PF1 = None
+        # вероятность отказа треб. 2-класса
+        self.PF2 = None
+        # м.о. числа треб. очереди 1-класса
+        self.Q1 = None
+        # м.о. числа треб. очереди 2-класса
+        self.Q2 = None
 
     def start(self):
         server_states = self.get_server_states()
-        print("Состояния фрагментов на системах (не включая очереди):")
-        for state_id, state in enumerate(server_states):
-            print('S' + str(state_id), '= ', pretty_server_state(state))
+        # print("Состояния фрагментов на системах (не включая очереди):")
+        # for state_id, state in enumerate(server_states):
+        #     print('S' + str(state_id), '= ', pretty_server_state(state))
 
         states = self.get_all_state_with_queues(server_states)
-        print("\nСостояния системы вместе с очередями:")
 
-        for state_id, state in enumerate(states):
-            print('S' + str(state_id), '= ', pretty_state(state))
+        # print("\nСостояния системы вместе с очередями:")
+        # for state_id, state in enumerate(states):
+        #     print('S' + str(state_id), '= ', pretty_state(state))
 
         Q = self.create_generator(states)
 
-        print('Q = ', Q)
+        # print('Q = ', Q)
         np.savetxt("Q.txt", Q, fmt='%0.0f')
 
         distr = expm(Q * 100000000000)[0]
@@ -52,12 +68,13 @@ class StateSpace:
 
         average_demands_on_devices = 0
 
+        probability_of_failure = 0
         probability_of_failure1 = 0
         probability_of_failure2 = 0
 
-        print('Стационарное распределение P_i:', distr)
+        # print('Стационарное распределение P_i:', distr)
         for i, p_i in enumerate(distr):
-            print('P[', pretty_state(states[i]), '] =', p_i)
+            # print('P[', pretty_state(states[i]), '] =', p_i)
             average_queue1 += states[i][0][0] * p_i
             average_queue2 += states[i][0][1] * p_i
 
@@ -82,11 +99,12 @@ class StateSpace:
                 probability_of_failure1 += p_i
             if states[i][0][1] == self.queue_capacity[1]:
                 probability_of_failure2 += p_i
+            if states[i][0][0] == self.queue_capacity[0] or states[i][0][1] == self.queue_capacity[1]:
+                probability_of_failure += p_i
 
         print(sum(distr))
 
-        p_first = self.lambda1 / (
-                self.lambda1 + self.lambda2)
+        p_first = self.lambda1 / (self.lambda1 + self.lambda2)
         p_second = 1 - p_first
 
         print('Expected Queue 1 = ', average_queue1)
@@ -103,19 +121,17 @@ class StateSpace:
         print('Expected Waiting Time 2 = ', queue_waiting2)
         print()
 
-        RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
-        RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
+        self.RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
+        self.RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
         queue_waiting_prob1 = p_first * (1 - probability_of_failure1)
         queue_waiting_prob2 = p_second * (1 - probability_of_failure2)
         norm_const = 1 / (queue_waiting_prob1 + queue_waiting_prob2)
 
-        RT = ((queue_waiting1 + harmonic_sum(self.a) / _mu) * queue_waiting_prob1
-              + (queue_waiting2 + harmonic_sum(self.b) / _mu) * queue_waiting_prob2) * norm_const
+        self.RT = ((queue_waiting1 + harmonic_sum(self.a) / _mu) * queue_waiting_prob1
+                   + (queue_waiting2 + harmonic_sum(self.b) / _mu) * queue_waiting_prob2) * norm_const
 
-        print('Expected Response Time 1 = ', RT1)
-        stat.response1.append(RT1)
-        print('Expected Response Time 2 = ', RT2)
-        stat.response2.append(RT2)
+        print('Expected Response Time 1 = ', self.RT1)
+        print('Expected Response Time 2 = ', self.RT2)
         print()
 
         print('Expected free servers = ', average_free_servers)
@@ -133,12 +149,12 @@ class StateSpace:
         print('Expected service demand 2 = ', harmonic_sum(self.b))
         print()
 
+        print('Probability of failure = ', probability_of_failure)
+        self.PF = probability_of_failure
         print('Probability of failure 1 = ', probability_of_failure1)
-        stat.probability_of_failure1.append(probability_of_failure1)
+        self.PF1 = probability_of_failure1
         print('Probability of failure 2 = ', probability_of_failure2)
-        stat.probability_of_failure2.append(probability_of_failure2)
-
-        return RT
+        self.PF2 = probability_of_failure2
 
     def get_server_states(self):
         server_states = set()
@@ -174,59 +190,57 @@ class StateSpace:
     def get_achievable_states(self, current_state: tuple):
         states_and_rates = defaultdict(float)
 
-        print('#' * 100)
-        print('Рассмотрим состояние ' + pretty_state(current_state))
+        # print('#' * 100)
+        # print('Рассмотрим состояние ' + pretty_state(current_state))
 
         capacity1 = self.queue_capacity[0]
         capacity2 = self.queue_capacity[1]
 
         # получаем различные характеристики состояния
         q1 = current_state[0][0]
-        print('q1 = ', q1)
+        # print('q1 = ', q1)
         q2 = current_state[0][1]
-        print('q2 = ', q2)
+        # print('q2 = ', q2)
         server_state = current_state[1]
-        print('server_state = ', server_state)
+        # print('server_state = ', server_state)
 
         number_of_free_servers = self.number_of_free_servers_for_server_state(server_state)
-        print("Число свободных приборов", number_of_free_servers)
+        # print("Число свободных приборов", number_of_free_servers)
 
-        print("ПОСТУПЛЕНИЕ")
+        # print("ПОСТУПЛЕНИЕ")
         if q1 != capacity1:
             if number_of_free_servers < self.a:
                 new_state = create_state(q1 + 1, q2, server_state[0], server_state[1])
-                print(
-                    f'Поступление требования первого класса в очередь с интенсивностью {self.lambda1} и переход в стояние ',
-                    pretty_state(new_state))
+                # print( f'Поступление требования первого класса в очередь с интенсивностью {self.lambda1} и переход
+                # в стояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.lambda1
             else:
                 updated_first_demands_tasks = server_state[0]
                 updated_first_demands_tasks += (self.a,)
                 new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
-                print(f'Поступление требования первого класса с интенсивностью {self.lambda1} и немедленное начало его '
-                      'обслуживания и переход в состояние ', pretty_state(new_state))
+                # print(f'Поступление требования первого класса с интенсивностью {self.lambda1} и немедленное начало
+                # его ' 'обслуживания и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.lambda1
-        else:
-            print("Очередь заполнена - требование потерялось")
+        # else:
+        #     print("Очередь заполнена - требование потерялось")
 
         if q2 != capacity2:
             if number_of_free_servers < self.b:
                 new_state = create_state(q1, q2 + 1, server_state[0], server_state[1])
-                print(
-                    f'Поступление требования второго класса в очередь с интенсивностью {self.lambda2} и переход в стояние ',
-                    pretty_state(new_state))
+                # print( f'Поступление требования второго класса в очередь с интенсивностью {self.lambda2} и переход
+                # в стояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.lambda2
             else:
                 updated_second_demands_tasks = server_state[1]
                 updated_second_demands_tasks += (self.b,)
                 new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
-                print(f'Поступление требования второго класса с интенсивностью {self.lambda2} и немедленное начало его '
-                      ' обслуживания и переход в состояние ', pretty_state(new_state))
+                # print(f'Поступление требования второго класса с интенсивностью {self.lambda2} и немедленное начало
+                # его ' ' обслуживания и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.lambda2
-        else:
-            print("Очередь заполнена - требование потерялось")
+        # else:
+        #     print("Очередь заполнена - требование потерялось")
 
-        print('УХОД')
+        # print('УХОД')
         # 1й класс
         for index, number_of_lost_tasks_in_demand in enumerate(server_state[0]):
             updated_first_demands_tasks = list(server_state[0])
@@ -248,16 +262,16 @@ class StateSpace:
                         copy_q2 -= 1
                         copy_number_of_free_servers -= self.b
                 new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
-                print(f'Завершение обслуживания всего требования первого класса с интенсивностью {self.mu}',
-                      'и переход в состояние ', pretty_state(new_state))
+                # print(f'Завершение обслуживания всего требования первого класса с интенсивностью {self.mu}',
+                # 'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.mu
 
             else:
                 leave_intensity = self.mu * number_of_lost_tasks_in_demand
                 updated_first_demands_tasks[index] -= 1
                 new_state = create_state(q1, q2, updated_first_demands_tasks, server_state[1])
-                print(f'Завершение обслуживания фрагмента требования первого класса с интенсивностью {leave_intensity}',
-                      'и переход в состояние ', pretty_state(new_state))
+                # print(f'Завершение обслуживания фрагмента требования первого класса с интенсивностью {
+                # leave_intensity}', 'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += leave_intensity
 
         # 2й класс
@@ -280,16 +294,16 @@ class StateSpace:
                         copy_q2 -= 1
                         copy_number_of_free_servers -= self.b
                 new_state = create_state(copy_q1, copy_q2, updated_first_demands_tasks, updated_second_demands_tasks)
-                print(f'Завершение обслуживания всего требования второго класса с интенсивностью {self.mu}',
-                      'и переход в состояние ', pretty_state(new_state))
+                # print(f'Завершение обслуживания всего требования второго класса с интенсивностью {self.mu}',
+                #       'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += self.mu
 
             else:
                 leave_intensity = self.mu * number_of_lost_tasks_in_demand
                 updated_second_demands_tasks[index] -= 1
                 new_state = create_state(q1, q2, server_state[0], updated_second_demands_tasks)
-                print(f'Завершение обслуживания фрагмента требования второго класса с интенсивностью {leave_intensity}',
-                      'и переход в состояние ', pretty_state(new_state))
+                # print(f'Завершение обслуживания фрагмента требования второго класса с интенсивностью {
+                # leave_intensity}', 'и переход в состояние ', pretty_state(new_state))
                 states_and_rates[new_state] += leave_intensity
 
         return states_and_rates
@@ -324,40 +338,94 @@ if __name__ == '__main__':
     _b = 3
     _capacity1 = 5
     _capacity2 = 5
+    _lambda1 = 1
     _lambda2 = 1
     _mu = 3
 
-    lambdas1 = [x for x in np.arange(0.1, 1.5, 0.05)]
-
-    stat = Stat(lambdas1)
-
-    for i in range(len(lambdas1)):
-        sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, lambdas1[i], _lambda2, _mu)
-        sp.start()
-
-    stat.show()
-
-    input("Press Enter to continue...")
-
     k = 6
+    rt = np.zeros((k, k))
     rt1 = np.zeros((k, k))
     rt2 = np.zeros((k, k))
+    pf = np.zeros((k, k))
+    pf1 = np.zeros((k, k))
+    pf2 = np.zeros((k, k))
+    lambdas = list(np.linspace(0.5, 2, k))
 
-    for i, lam1 in enumerate(np.linspace(0.5, 2, k)):
-        for j, lam2 in enumerate(np.linspace(0.5, 2, k)):
-            sp1 = StateSpace(_M, _a, _b, _capacity1, _capacity2, lam1, lam2, _mu)
-            rt1[i, j] = sp1.start()
-            sp2 = StateSpace(_M, _b, _a, _capacity1, _capacity2, lam2, lam1, _mu)
-            rt2[i, j] = sp2.start()
+    print()
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, lam1, lam2, _mu)
+            sp.start()
+            rt[i, j] = sp.RT
+            rt1[i, j] = sp.RT1
+            rt2[i, j] = sp.RT2
+            pf[i, j] = sp.PF
+            pf1[i, j] = sp.PF1
+            pf2[i, j] = sp.PF2
 
-    print("TABLE:")
-    for i, lam1 in enumerate(np.linspace(0.5, 2, k)):
-        for j, lam2 in enumerate(np.linspace(0.5, 2, k)):
-            s1 = "%8.4f" % (rt1[i, j])
-            s2 = "%8.4f" % (rt2[i, j])
-            print(s1 + '/' + s2, end='\t')
+    print('м.о. длительности пребывания (общее) от входящего потока')
+    print('lambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (rt[i, j])
+            print(s, end='\t')
         print()
 
-    print(list(np.linspace(0.5, 2, k)))
+    # при lambda2 = 1.1
+    plt.plot(lambdas, rt[2], 'b')  # график зависимости от lambda1, lambda2 = 1.1
+    plt.plot(lambdas, [r[2] for r in rt], 'r')  # график зависимости от lambda2, lambda2 = 1.1
+    plt.title(f"Зависимость м.о. длит. преб. от интен. вход.")
+    plt.xlabel("lambda")
+    plt.ylabel("RT")
+    plt.grid()
+    plt.show()
 
+    print('м.о. длительности пребывания (для 1-класса) от входящего потока')
+    print('lambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (rt1[i, j])
+            print(s, end='\t')
+        print()
 
+    print('м.о. длительности пребывания (для 2-класса) от входящего потока')
+    print('lambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (rt2[i, j])
+            print(s, end='\t')
+        print()
+
+    print('вероятность отказа (общая) от входящего потока')
+    print('lambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (pf[i, j])
+            print(s, end='\t')
+        print()
+
+    plt.plot(lambdas, pf[2], 'b')  # график зависимости от lambda1, lambda2 = 1.1
+    plt.plot(lambdas, [p[2] for p in pf], 'r')  # график зависимости от lambda2, lambda2 = 1.1
+    plt.title(f"Зависимость вероятности отказа")
+    plt.xlabel("lambda")
+    plt.ylabel("PF")
+    plt.grid()
+    plt.show()
+
+    print('вероятность отказа (для 1-класса) от входящего потока')
+    print('lambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (pf1[i, j])
+            print(s, end='\t')
+        print()
+
+    print('вероятность отказа  (для 2-класса) от входящего потока')
+    print('lambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (pf2[i, j])
+            print(s, end='\t')
+        print()
+
+    print()

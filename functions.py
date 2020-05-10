@@ -10,7 +10,7 @@ def pretty_server_state(server_state):
             elements.append(empty_set_str)
         else:
             elements.append(str(s))
-    # склеиваем все вместе и заменяем скобки list на фигурные для множества
+
     return '(' + \
            ', '.join(elements).replace('(', '{').replace(',)', '}').replace(')', '}') \
            + ')'
