@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 
 import numpy as np
@@ -108,7 +109,9 @@ class StateSpace:
         p_second = 1 - p_first
 
         print('Expected Queue 1 = ', average_queue1)
+        self.Q1 = average_queue1
         print('Expected Queue 2 = ', average_queue2)
+        self.Q2 = average_queue2
         print()
 
         effective_lambda1 = self.lambda1 * (1 - probability_of_failure1)
@@ -333,6 +336,8 @@ class StateSpace:
 
 
 if __name__ == '__main__':
+    file = open('out.txt', 'w')
+
     _M = 4
     _a = 2
     _b = 3
@@ -349,9 +354,11 @@ if __name__ == '__main__':
     pf = np.zeros((k, k))
     pf1 = np.zeros((k, k))
     pf2 = np.zeros((k, k))
+    q1 = np.zeros((k, k))
+    q2 = np.zeros((k, k))
+
     lambdas = list(np.linspace(0.5, 2, k))
 
-    print()
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             sp = StateSpace(_M, _a, _b, _capacity1, _capacity2, lam1, lam2, _mu)
@@ -362,47 +369,48 @@ if __name__ == '__main__':
             pf[i, j] = sp.PF
             pf1[i, j] = sp.PF1
             pf2[i, j] = sp.PF2
+            q1[i, j] = sp.Q1
+            q2[i, j] = sp.Q2
 
-    print('м.о. длительности пребывания (общее) от входящего потока')
-    print('lambda2/lambda1:')
+    file.write('\nм.о. длительности пребывания (общее) от входящего потока')
+    file.write('\nlambda2/lambda1:')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (rt[i, j])
-            print(s, end='\t')
-        print()
+            file.write(s + '\t')
+        file.write('\n')
 
-    # при lambda2 = 1.1
     plt.plot(lambdas, rt[2], 'b')  # график зависимости от lambda1, lambda2 = 1.1
-    plt.plot(lambdas, [r[2] for r in rt], 'r')  # график зависимости от lambda2, lambda2 = 1.1
+    plt.plot(lambdas, [r[2] for r in rt], 'r')  # график зависимости от lambda2, lambda1 = 1.1
     plt.title(f"Зависимость м.о. длит. преб. от интен. вход.")
     plt.xlabel("lambda")
     plt.ylabel("RT")
     plt.grid()
     plt.show()
 
-    print('м.о. длительности пребывания (для 1-класса) от входящего потока')
-    print('lambda2/lambda1:')
+    file.write('\nм.о. длительности пребывания (для 1-класса) от входящего потока')
+    file.write('\nlambda2/lambda1:')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (rt1[i, j])
-            print(s, end='\t')
-        print()
+            file.write(s + '\t')
+        file.write('\n')
 
-    print('м.о. длительности пребывания (для 2-класса) от входящего потока')
-    print('lambda2/lambda1:')
+    file.write('\nм.о. длительности пребывания (для 2-класса) от входящего потока')
+    file.write('\nlambda2/lambda1:')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (rt2[i, j])
-            print(s, end='\t')
-        print()
+            file.write(s + '\t')
+        file.write('\n')
 
-    print('вероятность отказа (общая) от входящего потока')
-    print('lambda2/lambda1:')
+    file.write('\nвероятность отказа (общая) от входящего потока')
+    file.write('\nlambda2/lambda1:')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (pf[i, j])
-            print(s, end='\t')
-        print()
+            file.write(s + '\t')
+        file.write('\n')
 
     plt.plot(lambdas, pf[2], 'b')  # график зависимости от lambda1, lambda2 = 1.1
     plt.plot(lambdas, [p[2] for p in pf], 'r')  # график зависимости от lambda2, lambda2 = 1.1
@@ -412,20 +420,36 @@ if __name__ == '__main__':
     plt.grid()
     plt.show()
 
-    print('вероятность отказа (для 1-класса) от входящего потока')
-    print('lambda2/lambda1:')
+    file.write('\nвероятность отказа (для 1-класса) от входящего потока')
+    file.write('\nlambda2/lambda1:')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (pf1[i, j])
-            print(s, end='\t')
-        print()
+            file.write(s + '\t')
+        file.write('\n')
 
-    print('вероятность отказа  (для 2-класса) от входящего потока')
-    print('lambda2/lambda1:')
+    file.write('\nвероятность отказа  (для 2-класса) от входящего потока')
+    file.write('\nlambda2/lambda1:')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (pf2[i, j])
-            print(s, end='\t')
-        print()
+            file.write(s + '\t')
+        file.write('\n')
 
-    print()
+    file.write('\nм.о. числа треб. в очереди 1-класса от входящего потока')
+    file.write('\nlambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (q1[i, j])
+            file.write(s + '\t')
+        file.write('\n')
+
+    file.write('\nм.о. числа треб. в очереди 2-класса от входящего потока')
+    file.write('\nlambda2/lambda1:')
+    for i, lam1 in enumerate(lambdas):
+        for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (q2[i, j])
+            file.write(s + '\t')
+        file.write('\n')
+
+    file.close()
