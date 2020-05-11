@@ -373,7 +373,7 @@ if __name__ == '__main__':
             q2[i, j] = sp.Q2
 
     file.write('\nм.о. длительности пребывания (общее) от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (rt[i, j])
@@ -389,7 +389,7 @@ if __name__ == '__main__':
     plt.show()
 
     file.write('\nм.о. длительности пребывания (для 1-класса) от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (rt1[i, j])
@@ -397,7 +397,7 @@ if __name__ == '__main__':
         file.write('\n')
 
     file.write('\nм.о. длительности пребывания (для 2-класса) от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (rt2[i, j])
@@ -405,7 +405,7 @@ if __name__ == '__main__':
         file.write('\n')
 
     file.write('\nвероятность отказа (общая) от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (pf[i, j])
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     plt.show()
 
     file.write('\nвероятность отказа (для 1-класса) от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (pf1[i, j])
@@ -429,7 +429,7 @@ if __name__ == '__main__':
         file.write('\n')
 
     file.write('\nвероятность отказа  (для 2-класса) от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (pf2[i, j])
@@ -437,7 +437,7 @@ if __name__ == '__main__':
         file.write('\n')
 
     file.write('\nм.о. числа треб. в очереди 1-класса от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
             s = "%8.4f" % (q1[i, j])
@@ -445,9 +445,34 @@ if __name__ == '__main__':
         file.write('\n')
 
     file.write('\nм.о. числа треб. в очереди 2-класса от входящего потока')
-    file.write('\nlambda2/lambda1:')
+    file.write('\nlambda2/lambda1:\n')
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
+            s = "%8.4f" % (q2[i, j])
+            file.write(s + '\t')
+        file.write('\n')
+
+    # считаем теперь м.о. числа требований в очередях от размерности очередей
+    capacitys = range(5, 21, 3)
+    for i, cap1 in enumerate(capacitys):
+        for j, cap2 in enumerate(capacitys):
+            sp = StateSpace(_M, _a, _b, cap1, cap2, _lambda1, _lambda2, _mu)
+            sp.start()
+            q1[i, j] = sp.Q1
+            q2[i, j] = sp.Q2
+
+    file.write('\nм.о. числа треб. в очереди 1-класса от расмерности очередей')
+    file.write('\ncap2/cap1:\n')
+    for i, cap1 in enumerate(lambdas):
+        for j, cap2 in enumerate(lambdas):
+            s = "%8.4f" % (q1[i, j])
+            file.write(s + '\t')
+        file.write('\n')
+
+    file.write('\nм.о. числа треб. в очереди 2-класса от расмерности очередей')
+    file.write('\ncap2/cap1:\n')
+    for i, cap1 in enumerate(lambdas):
+        for j, cap2 in enumerate(lambdas):
             s = "%8.4f" % (q2[i, j])
             file.write(s + '\t')
         file.write('\n')
