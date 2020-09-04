@@ -1,4 +1,3 @@
-
 class Stat:
     def __init__(self, lambdas: list):
         self.lambdas: list = lambdas
