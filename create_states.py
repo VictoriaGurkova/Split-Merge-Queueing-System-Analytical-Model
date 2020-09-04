@@ -1,4 +1,3 @@
-import logging
 from collections import defaultdict
 
 import numpy as np
@@ -54,7 +53,7 @@ class StateSpace:
         Q = self.create_generator(states)
 
         print('Q = ', Q)
-        np.savetxt("Q.txt", Q, fmt='%0.0f')
+        np.savetxt("output/Q.txt", Q, fmt='%0.0f')
 
         distr = expm(Q * 100000000000)[0]
 
@@ -138,9 +137,9 @@ class StateSpace:
         queue_waiting_prob2 = p_second * (1 - probability_of_failure2)
         norm_const = 1 / (queue_waiting_prob1 + queue_waiting_prob2)
 
-        self.RT = ((queue_waiting1 + harmonic_sum(self.a) / _mu) *
+        self.RT = ((queue_waiting1 + harmonic_sum(self.a) / self.mu) *
                    queue_waiting_prob1
-                   + (queue_waiting2 + harmonic_sum(self.b) / _mu) *
+                   + (queue_waiting2 + harmonic_sum(self.b) / self.mu) *
                    queue_waiting_prob2) * norm_const
 
         print('Expected Response Time 1 = ', self.RT1)
@@ -386,7 +385,7 @@ class StateSpace:
 
 
 if __name__ == '__main__':
-    file = open('out.txt', 'w')
+    file = open('output/out.txt', 'w')
 
     _M = 4
     _a = 2
