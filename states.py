@@ -124,6 +124,16 @@ class QueueingSystem:
         self.data.PF1 = probability_of_failure1
         self.data.PF2 = probability_of_failure2
 
+        T = (self.data.Q1 + self.data.Q2 + average_demands_on_devices1 + average_demands_on_devices2) / (
+                effective_lambda1 + effective_lambda2)
+        T1 = (self.data.Q1 + average_demands_on_devices1) / (
+            effective_lambda1)
+        T2 = (self.data.Q2 + average_demands_on_devices2) / (
+            effective_lambda2)
+        print("T = ", T)
+        print("T1 = ", T1)
+        print("T2 = ", T2)
+
     def get_server_states(self):
         server_states = set()
         for i in range(self.x + 1):
