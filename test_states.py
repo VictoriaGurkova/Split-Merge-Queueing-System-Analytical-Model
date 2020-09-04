@@ -1,6 +1,6 @@
 import unittest
 
-from create_states import StateSpace
+from states import QueueingSystem
 
 
 class TestStates(unittest.TestCase):
@@ -11,12 +11,13 @@ class TestStates(unittest.TestCase):
         ans_rt = 1.7833
         ans_pf = 0.1122
 
-        sp = StateSpace(date["M"], date["a"], date["b"], date["cap1"],
-                        date["cap2"], date["lam1"], date["lam2"], date["mu"])
-        sp.start()
+        qs = QueueingSystem(date["M"], date["a"], date["b"], date["cap1"],
+                            date["cap2"], date["lam1"], date["lam2"], date["mu"])
+        qs.start()
+        qs.data.print_data()
 
-        self.assertEqual(round(sp.RT, 4), ans_rt)
-        self.assertEqual(round(sp.PF, 4), ans_pf)
+        self.assertEqual(round(qs.data.RT, 4), ans_rt)
+        self.assertEqual(round(qs.data.PF, 4), ans_pf)
 
     def test_case2(self):
         date = {"M": 7, "a": 5, "b": 2, "cap1": 8, "cap2": 8, "lam1": 1.5, "lam2": 1.5, "mu": 3.5}
@@ -24,12 +25,13 @@ class TestStates(unittest.TestCase):
         ans_rt = 1.9516
         ans_pf = 0.0631
 
-        sp = StateSpace(date["M"], date["a"], date["b"], date["cap1"],
-                        date["cap2"], date["lam1"], date["lam2"], date["mu"])
-        sp.start()
+        qs = QueueingSystem(date["M"], date["a"], date["b"], date["cap1"],
+                            date["cap2"], date["lam1"], date["lam2"], date["mu"])
+        qs.start()
+        qs.data.print_data()
 
-        self.assertEqual(round(sp.RT, 4), ans_rt)
-        self.assertEqual(round(sp.PF, 4), ans_pf)
+        self.assertEqual(round(qs.data.RT, 4), ans_rt)
+        self.assertEqual(round(qs.data.PF, 4), ans_pf)
 
 
 if __name__ == '__main__':
