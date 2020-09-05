@@ -69,8 +69,8 @@ if __name__ == '__main__':
     plt.xlabel("lambda")
     plt.ylabel("RT")
     plt.grid()
-    plt.show()
     plt.savefig('output/RT-lambda.png')
+    plt.show()
 
     file.write('\nм.о. длительности пребывания (для 1-класса) от входящего потока')
     file.write('\nlambda2/lambda1:\n')
@@ -102,8 +102,8 @@ if __name__ == '__main__':
     plt.xlabel("lambda")
     plt.ylabel("PF")
     plt.grid()
-    plt.show()
     plt.savefig('output/pf-lambda.png')
+    plt.show()
 
     file.write('\nвероятность отказа (для 1-класса) от входящего потока')
     file.write('\nlambda2/lambda1:\n')
