@@ -1,4 +1,4 @@
-class Data:
+class PerfomanceMeasures:
 
     def __init__(self):
         # м.о. длит. пребывания (общее)
@@ -7,7 +7,7 @@ class Data:
         self.RT1 = None
         # м.о. длит. пребывания треб. 2-класса
         self.RT2 = None
-        # вероятность отказа (общаяя)
+        # вероятность отказа (общая)
         self.PF = None
         # вероятность отказа треб. 1-класса
         self.PF1 = None
@@ -18,18 +18,12 @@ class Data:
         # м.о. числа треб. очереди 2-класса
         self.Q2 = None
 
-    def print_data(self):
-        print("RT =", self.RT)
-        print("RT1 =", self.RT1)
-        print("RT2 =", self.RT2)
-
-        print()
-
-        print("PF =", self.PF)
-        print("PF1 =", self.PF1)
-        print("PF2 =", self.PF2)
-
-        print()
-
-        print("Q1 =", self.Q1)
-        print("Q2 =", self.Q2)
+    def __str__(self):
+        return  f"RT = {self.RT} \n"\
+                f"RT1 = {self.RT1} \n" \
+                f"RT2 = {self.RT2} \n" \
+                f"PF = {self.PF} \n" \
+                f"PF1 = {self.PF1} \n" \
+                f"PF2 = {self.PF2} \n" \
+                f"Q1 = {self.Q1} \n" \
+                f"Q2 = {self.Q2} \n"

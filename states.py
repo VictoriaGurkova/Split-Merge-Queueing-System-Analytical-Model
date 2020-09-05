@@ -1,10 +1,13 @@
+import logging
 from collections import defaultdict
 
 import numpy as np
 from scipy.linalg import expm
 
-from data_store import Data
+from data_store import PerfomanceMeasures
 from functions import *
+
+logger = logging.getLogger()
 
 
 class QueueingSystem:
@@ -21,23 +24,23 @@ class QueueingSystem:
         self.x = M // a
         self.y = M // b
 
-        self.data = Data()
+        self.data = PerfomanceMeasures()
 
-    def start(self):
+    def calculate(self):
         server_states = self.get_server_states()
-        print("Состояния фрагментов на системах (не включая очереди):")
+        logger.debug("Состояния фрагментов на системах (не включая очереди):")
         for state_id, state in enumerate(server_states):
-            print('S' + str(state_id), '= ', pretty_server_state(state))
+            logger.debug(f'S {state_id}= {pretty_server_state(state)}')
 
         states = self.get_all_state_with_queues(server_states)
 
-        print("\nСостояния системы вместе с очередями:")
+        logger.debug("\nСостояния системы вместе с очередями:")
         for state_id, state in enumerate(states):
-            print('S' + str(state_id), '= ', pretty_state(state))
+            logger.debug(f'S{state_id} = {pretty_state(state)}')
 
         Q = self.create_generator(states)
 
-        print('Q = ', Q)
+        logger.debug(f'Q = {Q}')
         np.savetxt("output/Q.txt", Q, fmt='%0.0f')
 
         distr = expm(Q * 100000000000)[0]
@@ -57,9 +60,9 @@ class QueueingSystem:
         probability_of_failure1 = 0
         probability_of_failure2 = 0
 
-        print('Стационарное распределение P_i:', distr)
+        logger.debug(f'Стационарное распределение P_i: {distr}')
         for i, p_i in enumerate(distr):
-            print('P[', pretty_state(states[i]), '] =', p_i)
+            logger.debug(f'P[{pretty_state(states[i])}] = {p_i}')
             average_queue1 += states[i][0][0] * p_i
             average_queue2 += states[i][0][1] * p_i
 
@@ -95,7 +98,7 @@ class QueueingSystem:
                     states[i][0][1] == self.queue_capacity[1]:
                 probability_of_failure += p_i
 
-        print("Check sum P_i:", sum(distr))
+        logger.debug(f"Check sum P_i: {sum(distr)}")
 
         p_first = self.lambda1 / (self.lambda1 + self.lambda2)
         p_second = 1 - p_first
@@ -109,30 +112,24 @@ class QueueingSystem:
         queue_waiting1 = average_queue1 / effective_lambda1
         queue_waiting2 = average_queue2 / effective_lambda2
 
-        self.data.RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
-        self.data.RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
+        self.data.RT1 = (self.data.Q1 + average_demands_on_devices1) / (
+            effective_lambda1)
+        # self.data.RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
+
+        self.data.RT2 = (self.data.Q2 + average_demands_on_devices2) / (
+            effective_lambda2)
+        # self.data.RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
+
         queue_waiting_prob1 = p_first * (1 - probability_of_failure1)
         queue_waiting_prob2 = p_second * (1 - probability_of_failure2)
         norm_const = 1 / (queue_waiting_prob1 + queue_waiting_prob2)
 
-        self.data.RT = ((queue_waiting1 + harmonic_sum(self.a) / self.mu) *
-                        queue_waiting_prob1
-                        + (queue_waiting2 + harmonic_sum(self.b) / self.mu) *
-                        queue_waiting_prob2) * norm_const
+        self.data.RT = (self.data.Q1 + self.data.Q2 + average_demands_on_devices1 + average_demands_on_devices2) / (
+                effective_lambda1 + effective_lambda2)
 
         self.data.PF = probability_of_failure
         self.data.PF1 = probability_of_failure1
         self.data.PF2 = probability_of_failure2
-
-        T = (self.data.Q1 + self.data.Q2 + average_demands_on_devices1 + average_demands_on_devices2) / (
-                effective_lambda1 + effective_lambda2)
-        T1 = (self.data.Q1 + average_demands_on_devices1) / (
-            effective_lambda1)
-        T2 = (self.data.Q2 + average_demands_on_devices2) / (
-            effective_lambda2)
-        print("T = ", T)
-        print("T1 = ", T1)
-        print("T2 = ", T2)
 
     def get_server_states(self):
         server_states = set()
@@ -170,33 +167,33 @@ class QueueingSystem:
     def get_achievable_states(self, current_state: tuple):
         states_and_rates = defaultdict(float)
 
-        print('#' * 100)
-        print('Рассмотрим состояние ' + pretty_state(current_state))
+        logger.debug('#' * 100)
+        logger.debug('Рассмотрим состояние ' + pretty_state(current_state))
 
         capacity1 = self.queue_capacity[0]
         capacity2 = self.queue_capacity[1]
 
         # получаем различные характеристики состояния
         q1 = current_state[0][0]
-        print('q1 = ', q1)
+        logger.debug(f'q1 = {q1}')
         q2 = current_state[0][1]
-        print('q2 = ', q2)
+        logger.debug(f'q2 = {q2}')
         server_state = current_state[1]
-        print('server_state = ', server_state)
+        logger.debug(f'server_state = {server_state}')
 
         number_of_free_servers = \
             self.number_of_free_servers_for_server_state(server_state)
-        print("Число свободных приборов", number_of_free_servers)
+        logger.debug(f"Число свободных приборов {number_of_free_servers}")
 
-        print("ПОСТУПЛЕНИЕ")
+        logger.debug("ПОСТУПЛЕНИЕ")
         if q1 != capacity1:
             if number_of_free_servers < self.a:
                 new_state = create_state(q1 + 1, q2,
                                          server_state[0],
                                          server_state[1])
-                print(f'Поступление требования первого класса в '
-                      f'очередь с интенсивностью {self.lambda1} и '
-                      f'переход в стояние ', pretty_state(new_state))
+                logger.debug(f'Поступление требования первого класса в '
+                             f'очередь с интенсивностью {self.lambda1} и '
+                             f'переход в стояние  {pretty_state(new_state)}')
                 states_and_rates[new_state] += self.lambda1
             else:
                 updated_first_demands_tasks = server_state[0]
@@ -204,38 +201,37 @@ class QueueingSystem:
                 new_state = create_state(q1, q2,
                                          updated_first_demands_tasks,
                                          server_state[1])
-                print(f'Поступление требования первого класса с '
-                      f'интенсивностью {self.lambda1} и '
-                      f'немедленное начало его'
-                      f' обслуживания и переход в состояние ',
-                      pretty_state(new_state))
+                logger.debug(f'Поступление требования первого класса с '
+                             f'интенсивностью {self.lambda1} и '
+                             f'немедленное начало его'
+                             f' обслуживания и переход в состояние {pretty_state(new_state)}')
                 states_and_rates[new_state] += self.lambda1
         else:
-            print("Очередь заполнена - требование потерялось")
+            logger.debug("Очередь заполнена - требование потерялось")
 
         if q2 != capacity2:
             if number_of_free_servers < self.b:
                 new_state = create_state(q1, q2 + 1,
                                          server_state[0],
                                          server_state[1])
-                print(f'Поступление требования второго класса в очередь с '
-                      f'интенсивностью {self.lambda2} и '
-                      f'переход в стояние ', pretty_state(new_state))
+                logger.debug(f'Поступление требования второго класса в очередь с '
+                             f'интенсивностью {self.lambda2} и '
+                             f'переход в стояние  {pretty_state(new_state)}')
                 states_and_rates[new_state] += self.lambda2
             else:
                 updated_second_demands_tasks = server_state[1]
                 updated_second_demands_tasks += (self.b,)
                 new_state = create_state(q1, q2, server_state[0],
                                          updated_second_demands_tasks)
-                print(f'Поступление требования второго класса с '
-                      f'интенсивностью {self.lambda2} и '
-                      f'немедленное начало его обслуживания и '
-                      f'переход в состояние ', pretty_state(new_state))
+                logger.debug(f'Поступление требования второго класса с '
+                             f'интенсивностью {self.lambda2} и '
+                             f'немедленное начало его обслуживания и '
+                             f'переход в состояние {pretty_state(new_state)}')
                 states_and_rates[new_state] += self.lambda2
         else:
-            print("Очередь заполнена - требование потерялось")
+            logger.debug("Очередь заполнена - требование потерялось")
 
-        print('УХОД')
+        logger.debug('УХОД')
         # 1й класс
         for index, number_of_lost_tasks_in_demand in \
                 enumerate(server_state[0]):
@@ -262,9 +258,9 @@ class QueueingSystem:
                 new_state = create_state(copy_q1, copy_q2,
                                          updated_first_demands_tasks,
                                          updated_second_demands_tasks)
-                print(f'Завершение обслуживания всего требования '
-                      f'первого класса с интенсивностью {self.mu}, и '
-                      f'переход в состояние ', pretty_state(new_state))
+                logger.debug(f'Завершение обслуживания всего требования '
+                             f'первого класса с интенсивностью {self.mu}, и '
+                             f'переход в состояние {pretty_state(new_state)}')
                 states_and_rates[new_state] += self.mu
 
             else:
@@ -272,10 +268,10 @@ class QueueingSystem:
                 updated_first_demands_tasks[index] -= 1
                 new_state = create_state(q1, q2, updated_first_demands_tasks,
                                          server_state[1])
-                print(f'Завершение обслуживания фрагмента '
-                      f'требования первого класса с '
-                      f'интенсивностью {leave_intensity}',
-                      'и переход в состояние ', pretty_state(new_state))
+                logger.debug(f'Завершение обслуживания фрагмента '
+                             f'требования первого класса с '
+                             f'интенсивностью {leave_intensity}'
+                             f" переход в состояние {pretty_state(new_state)}")
                 states_and_rates[new_state] += leave_intensity
 
         # 2й класс
@@ -303,9 +299,9 @@ class QueueingSystem:
                 new_state = create_state(copy_q1, copy_q2,
                                          updated_first_demands_tasks,
                                          updated_second_demands_tasks)
-                print(f'Завершение обслуживания всего требования '
-                      f'второго класса с интенсивностью {self.mu}',
-                      'и переход в состояние ', pretty_state(new_state))
+                logger.debug(f'Завершение обслуживания всего требования '
+                             f'второго класса с интенсивностью {self.mu}'
+                             f'и переход в состояние {pretty_state(new_state)}')
                 states_and_rates[new_state] += self.mu
 
             else:
@@ -313,10 +309,10 @@ class QueueingSystem:
                 updated_second_demands_tasks[index] -= 1
                 new_state = create_state(q1, q2, server_state[0],
                                          updated_second_demands_tasks)
-                print(f'Завершение обслуживания фрагмента '
-                      f'требования второго класса с '
-                      f'интенсивностью {leave_intensity}',
-                      'и переход в состояние ', pretty_state(new_state))
+                logger.debug(f'Завершение обслуживания фрагмента '
+                             f'требования второго класса с '
+                             f'интенсивностью {leave_intensity} '
+                             f'и переход в состояние {pretty_state(new_state)}')
                 states_and_rates[new_state] += leave_intensity
 
         return states_and_rates
@@ -347,3 +343,9 @@ class QueueingSystem:
             raise Exception("Number of free servers for states < 0, "
                             "it is not correct state")
         return number
+
+    def __str__(self):
+        return f"({self.M}, {self.lambda1}, {self.lambda2}," \
+               f" {self.a}, {self.b}," \
+               f" {self.queue_capacity}," \
+               f" {self.mu})"

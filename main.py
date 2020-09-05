@@ -1,19 +1,27 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from states import QueueingSystem
 
-if __name__ == '__main__':
-    file = open('output/out.txt', 'w')
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+handler = logging.FileHandler('app.log', 'w', 'utf-8')  # or whatever
+handler.setFormatter(logging.Formatter('%(message)s'))  # or whatever
+root_logger.addHandler(handler)
 
-    _M = 4
-    _a = 2
-    _b = 3
-    _capacity1 = 5
-    _capacity2 = 5
-    _lambda1 = 1
-    _lambda2 = 1
-    _mu = 3
+if __name__ == '__main__':
+    file = open('output/out.txt', 'w', encoding='utf-8')
+
+    M = 4
+    a = 2
+    b = 3
+    capacity1 = 5
+    capacity2 = 5
+    lambda1 = 1
+    lambda2 = 1
+    mu = 3
 
     k = 6
     rt = np.zeros((k, k))
@@ -27,11 +35,13 @@ if __name__ == '__main__':
 
     lambdas = list(np.linspace(0.5, 2, k))
 
+    print("Зависимость от интенсивностей входящего потока")
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
-            qs = QueueingSystem(_M, _a, _b, _capacity1, _capacity2,
-                                lam1, lam2, _mu)
-            qs.start()
+            qs = QueueingSystem(M, a, b, capacity1, capacity2,
+                                lam1, lam2, mu)
+            qs.calculate()
+            print(f"measures for {qs} \n{qs.data}")
             rt[i, j] = qs.data.RT
             rt1[i, j] = qs.data.RT1
             rt2[i, j] = qs.data.RT2
@@ -60,6 +70,7 @@ if __name__ == '__main__':
     plt.ylabel("RT")
     plt.grid()
     plt.show()
+    plt.savefig('output/RT-lambda.png')
 
     file.write('\nм.о. длительности пребывания (для 1-класса) от входящего потока')
     file.write('\nlambda2/lambda1:\n')
@@ -92,6 +103,7 @@ if __name__ == '__main__':
     plt.ylabel("PF")
     plt.grid()
     plt.show()
+    plt.savefig('output/pf-lambda.png')
 
     file.write('\nвероятность отказа (для 1-класса) от входящего потока')
     file.write('\nlambda2/lambda1:\n')
@@ -126,11 +138,13 @@ if __name__ == '__main__':
         file.write('\n')
 
     # считаем теперь м.о. числа требований в очередях от размерности очередей
-    capacitys = range(5, 21, 3)
-    for i, cap1 in enumerate(capacitys):
-        for j, cap2 in enumerate(capacitys):
-            qs = QueueingSystem(_M, _a, _b, cap1, cap2, _lambda1, _lambda2, _mu)
-            qs.start()
+    print("Зависимость от длины очередей")
+    capacities = range(5, 21, 3)
+    for i, cap1 in enumerate(capacities):
+        for j, cap2 in enumerate(capacities):
+            qs = QueueingSystem(M, a, b, cap1, cap2, lambda1, lambda2, mu)
+            qs.calculate()
+            print(f"measures for {qs} \n{qs.data}")
             q1[i, j] = qs.data.Q1
             q2[i, j] = qs.data.Q2
 
@@ -151,3 +165,4 @@ if __name__ == '__main__':
         file.write('\n')
 
     file.close()
+    print("executed")
