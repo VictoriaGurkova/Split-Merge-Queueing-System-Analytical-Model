@@ -14,14 +14,16 @@ root_logger.addHandler(handler)
 if __name__ == '__main__':
     file = open('output/out.txt', 'w', encoding='utf-8')
 
-    M = 4
-    a = 2
-    b = 3
-    capacity1 = 5
-    capacity2 = 5
-    lambda1 = 1
-    lambda2 = 1
-    mu = 3
+    system = {
+        "M": 4,
+        "a": 2,
+        "b": 3,
+        "cap1": 5,
+        "cap2": 5,
+        "lam1": 1,
+        "lam2": 1,
+        "mu": 3
+    }
 
     k = 6
     rt = np.zeros((k, k))
@@ -38,8 +40,7 @@ if __name__ == '__main__':
     print("Зависимость от интенсивностей входящего потока")
     for i, lam1 in enumerate(lambdas):
         for j, lam2 in enumerate(lambdas):
-            qs = QueueingSystem(M, a, b, capacity1, capacity2,
-                                lam1, lam2, mu)
+            qs = QueueingSystem(system)
             qs.calculate()
             print(f"measures for {qs} \n{qs.data}")
             rt[i, j] = qs.data.RT
@@ -142,7 +143,10 @@ if __name__ == '__main__':
     capacities = range(5, 21, 3)
     for i, cap1 in enumerate(capacities):
         for j, cap2 in enumerate(capacities):
-            qs = QueueingSystem(M, a, b, cap1, cap2, lambda1, lambda2, mu)
+            qs = QueueingSystem(system["M"], system["a"], system["b"],
+                                cap1, cap2,
+                                system["lam1"], system["lam2"],
+                                system["mu"])
             qs.calculate()
             print(f"measures for {qs} \n{qs.data}")
             q1[i, j] = qs.data.Q1

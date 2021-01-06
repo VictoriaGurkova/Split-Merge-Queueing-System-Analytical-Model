@@ -4,13 +4,27 @@ from collections import defaultdict
 import numpy as np
 from scipy.linalg import expm
 
-from data_store import PerfomanceMeasures
-from functions import *
+from data_store import PerformanceMeasures
+from utils import *
 
 logger = logging.getLogger()
 
 
 class QueueingSystem:
+
+    def __init__(self, system):
+        self.M = system["M"]
+        self.a = system["a"]
+        self.b = system["b"]
+        self.lambda1 = system["lam1"]
+        self.lambda2 = system["lam2"]
+        self.mu = system["mu"]
+        self.queue_capacity = [system["cap1"], system["cap2"]]
+
+        self.x = system["M"] // system["a"]
+        self.y = system["M"] // system["b"]
+
+        self.data = PerformanceMeasures()
 
     def __init__(self, M, a, b, capacity1, capacity2, lambda1, lambda2, mu):
         self.M = M
@@ -24,7 +38,7 @@ class QueueingSystem:
         self.x = M // a
         self.y = M // b
 
-        self.data = PerfomanceMeasures()
+        self.data = PerformanceMeasures()
 
     def calculate(self):
         server_states = self.get_server_states()

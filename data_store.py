@@ -1,4 +1,4 @@
-class PerfomanceMeasures:
+class PerformanceMeasures:
 
     def __init__(self):
         # м.о. длит. пребывания (общее)
@@ -19,11 +19,11 @@ class PerfomanceMeasures:
         self.Q2 = None
 
     def __str__(self):
-        return  f"RT = {self.RT} \n"\
-                f"RT1 = {self.RT1} \n" \
-                f"RT2 = {self.RT2} \n" \
-                f"PF = {self.PF} \n" \
-                f"PF1 = {self.PF1} \n" \
-                f"PF2 = {self.PF2} \n" \
-                f"Q1 = {self.Q1} \n" \
-                f"Q2 = {self.Q2} \n"
+        return f"RT = {self.RT} \n"\
+               f"RT1 = {self.RT1} \n" \
+               f"RT2 = {self.RT2} \n" \
+               f"PF = {self.PF} \n" \
+               f"PF1 = {self.PF1} \n" \
+               f"PF2 = {self.PF2} \n" \
+               f"Q1 = {self.Q1} \n" \
+               f"Q2 = {self.Q2} \n"

@@ -8,7 +8,7 @@ class Stat:
         self.probability_of_failure1: list = list()
         self.probability_of_failure2: list = list()
 
-    def save_RT(self, name):
+    def save_RT(self, name: str):
         file = open(name, 'w')
         for i in range(len(self.lambdas)):
             file.write(str(self.lambdas[i]) + ' ' + str(self.response1[i]) + ' ' + str(self.response2[i]))

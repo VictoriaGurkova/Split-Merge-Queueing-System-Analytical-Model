@@ -10,7 +10,6 @@ def pretty_server_state(server_state):
             elements.append(empty_set_str)
         else:
             elements.append(str(s))
-
     return '(' + \
            ', '.join(elements).replace('(', '{').replace(',)', '}').replace(')', '}') \
            + ')'
