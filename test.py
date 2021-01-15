@@ -25,7 +25,7 @@ class TestStates(unittest.TestCase):
     def test_case2(self):
         test_data = {
             "params": dict(M=7, a=5, b=2, c1=8, c2=8, l1=1.5, l2=1.5, mu=3.5),
-            "expected_rt": 1.9516,
+            "expected_rt": 1.9517,
             "expected_fp": 0.0631
         }
 
@@ -34,7 +34,7 @@ class TestStates(unittest.TestCase):
     def compare_results(self, data):
         result = get_data(data["params"])
         self.assertAlmostEqual(result.response_time, data["expected_rt"], places=4)
-        self.assertAlmostEqual(result.PF, data["expected_fp"], places=4)
+        self.assertAlmostEqual(result.failure_probability, data["expected_fp"], places=4)
 
 
 if __name__ == '__main__':
