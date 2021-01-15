@@ -22,8 +22,8 @@ def pretty_state(state):
            pretty_server_state(server_state) + ')'
 
 
-def get_lots_of_fragments(amount_of_demands,
-                          fragments_in_class):
+def get_fragments_lots(amount_of_demands,
+                       fragments_in_class):
     return list(itertools.combinations_with_replacement(
         range(1, fragments_in_class + 1), amount_of_demands))
 

@@ -141,9 +141,9 @@ class QueueingSystem:
         self.data.RT = (self.data.Q1 + self.data.Q2 + average_demands_on_devices1 + average_demands_on_devices2) / (
                 effective_lambda1 + effective_lambda2)
 
-        self.data.PF = probability_of_failure
-        self.data.PF1 = probability_of_failure1
-        self.data.PF2 = probability_of_failure2
+        self.data.FP = probability_of_failure
+        self.data.FP1 = probability_of_failure1
+        self.data.FP2 = probability_of_failure2
 
     def get_server_states(self):
         server_states = set()
@@ -152,8 +152,8 @@ class QueueingSystem:
                 total_number_of_tasks = self.a * i + self.b * j
                 if self.M < total_number_of_tasks:
                     continue
-                X = sorted(get_lots_of_fragments(i, self.a))
-                Y = sorted(get_lots_of_fragments(j, self.b))
+                X = sorted(get_fragments_lots(i, self.a))
+                Y = sorted(get_fragments_lots(j, self.b))
                 server_states.update(itertools.product(X, Y))
         return server_states
 

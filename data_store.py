@@ -8,11 +8,11 @@ class PerformanceMeasures:
         # м.о. длит. пребывания треб. 2-класса
         self.RT2 = None
         # вероятность отказа (общая)
-        self.PF = None
+        self.FP = None
         # вероятность отказа треб. 1-класса
-        self.PF1 = None
+        self.FP1 = None
         # вероятность отказа треб. 2-класса
-        self.PF2 = None
+        self.FP2 = None
         # м.о. числа треб. очереди 1-класса
         self.Q1 = None
         # м.о. числа треб. очереди 2-класса
@@ -22,8 +22,8 @@ class PerformanceMeasures:
         return f"RT = {self.RT} \n"\
                f"RT1 = {self.RT1} \n" \
                f"RT2 = {self.RT2} \n" \
-               f"PF = {self.PF} \n" \
-               f"PF1 = {self.PF1} \n" \
-               f"PF2 = {self.PF2} \n" \
+               f"FP = {self.FP} \n" \
+               f"FP1 = {self.FP1} \n" \
+               f"FP2 = {self.FP2} \n" \
                f"Q1 = {self.Q1} \n" \
                f"Q2 = {self.Q2} \n"
