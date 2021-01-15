@@ -117,8 +117,8 @@ class QueueingSystem:
         p_first = self.lambda1 / (self.lambda1 + self.lambda2)
         p_second = 1 - p_first
 
-        self.data.Q1 = average_queue1
-        self.data.Q2 = average_queue2
+        self.data.demands_count1 = average_queue1
+        self.data.demands_count2 = average_queue2
 
         effective_lambda1 = self.lambda1 * (1 - probability_of_failure1)
         effective_lambda2 = self.lambda2 * (1 - probability_of_failure2)
@@ -126,11 +126,11 @@ class QueueingSystem:
         queue_waiting1 = average_queue1 / effective_lambda1
         queue_waiting2 = average_queue2 / effective_lambda2
 
-        self.data.RT1 = (self.data.Q1 + average_demands_on_devices1) / (
+        self.data.response_time1 = (self.data.demands_count1 + average_demands_on_devices1) / (
             effective_lambda1)
         # self.data.RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
 
-        self.data.RT2 = (self.data.Q2 + average_demands_on_devices2) / (
+        self.data.response_time2 = (self.data.demands_count2 + average_demands_on_devices2) / (
             effective_lambda2)
         # self.data.RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
 
@@ -138,12 +138,12 @@ class QueueingSystem:
         queue_waiting_prob2 = p_second * (1 - probability_of_failure2)
         norm_const = 1 / (queue_waiting_prob1 + queue_waiting_prob2)
 
-        self.data.RT = (self.data.Q1 + self.data.Q2 + average_demands_on_devices1 + average_demands_on_devices2) / (
+        self.data.response_time = (self.data.demands_count1 + self.data.demands_count2 + average_demands_on_devices1 + average_demands_on_devices2) / (
                 effective_lambda1 + effective_lambda2)
 
-        self.data.FP = probability_of_failure
-        self.data.FP1 = probability_of_failure1
-        self.data.FP2 = probability_of_failure2
+        self.data.failure_probability = probability_of_failure
+        self.data.failure_probability1 = probability_of_failure1
+        self.data.failure_probability2 = probability_of_failure2
 
     def get_server_states(self):
         server_states = set()

@@ -43,14 +43,14 @@ if __name__ == '__main__':
             qs = QueueingSystem(system)
             qs.calculate()
             print(f"measures for {qs} \n{qs.data}")
-            rt[i, j] = qs.data.RT
-            rt1[i, j] = qs.data.RT1
-            rt2[i, j] = qs.data.RT2
+            rt[i, j] = qs.data.response_time
+            rt1[i, j] = qs.data.response_time1
+            rt2[i, j] = qs.data.response_time2
             pf[i, j] = qs.data.PF
             pf1[i, j] = qs.data.PF1
             pf2[i, j] = qs.data.PF2
-            q1[i, j] = qs.data.Q1
-            q2[i, j] = qs.data.Q2
+            q1[i, j] = qs.data.demands_count1
+            q2[i, j] = qs.data.demands_count2
 
     file.write('\nм.о. длительности пребывания (общее) от входящего потока')
     file.write('\nlambda2/lambda1:\n')
@@ -149,8 +149,8 @@ if __name__ == '__main__':
                                 system["mu"])
             qs.calculate()
             print(f"measures for {qs} \n{qs.data}")
-            q1[i, j] = qs.data.Q1
-            q2[i, j] = qs.data.Q2
+            q1[i, j] = qs.data.demands_count1
+            q2[i, j] = qs.data.demands_count2
 
     file.write('\nм.о. числа треб. в очереди 1-класса от расмерности очередей')
     file.write('\ncap2/cap1:\n')

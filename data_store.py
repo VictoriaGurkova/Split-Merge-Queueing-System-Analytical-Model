@@ -1,29 +1,21 @@
 class PerformanceMeasures:
 
     def __init__(self):
-        # м.о. длит. пребывания (общее)
-        self.RT = None
-        # м.о. длит. пребывания треб. 1-класса
-        self.RT1 = None
-        # м.о. длит. пребывания треб. 2-класса
-        self.RT2 = None
-        # вероятность отказа (общая)
-        self.FP = None
-        # вероятность отказа треб. 1-класса
-        self.FP1 = None
-        # вероятность отказа треб. 2-класса
-        self.FP2 = None
-        # м.о. числа треб. очереди 1-класса
-        self.Q1 = None
-        # м.о. числа треб. очереди 2-класса
-        self.Q2 = None
+        self.response_time = None
+        self.response_time1 = None
+        self.response_time2 = None
+        self.failure_probability = None
+        self.failure_probability1 = None
+        self.failure_probability2 = None
+        self.demands_count1 = None
+        self.demands_count2 = None
 
     def __str__(self):
-        return f"RT = {self.RT} \n"\
-               f"RT1 = {self.RT1} \n" \
-               f"RT2 = {self.RT2} \n" \
-               f"FP = {self.FP} \n" \
-               f"FP1 = {self.FP1} \n" \
-               f"FP2 = {self.FP2} \n" \
-               f"Q1 = {self.Q1} \n" \
-               f"Q2 = {self.Q2} \n"
+        return f"RT = {self.response_time} \n"\
+               f"RT1 = {self.response_time1} \n" \
+               f"RT2 = {self.response_time2} \n" \
+               f"FP = {self.failure_probability} \n" \
+               f"FP1 = {self.failure_probability1} \n" \
+               f"FP2 = {self.failure_probability2} \n" \
+               f"Q1 = {self.demands_count1} \n" \
+               f"Q2 = {self.demands_count2} \n"
