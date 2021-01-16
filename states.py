@@ -23,7 +23,7 @@ class QueueingSystem:
         for state_id, state in enumerate(server_states):
             logger.debug(f'S {state_id}= {pretty_server_state(state)}')
 
-        states = get_all_state_with_queues(server_states, self.params.queues_capacities)
+        states = get_all_state_with_queues(server_states, self.params.queue_capacity, self.params)
 
         logger.debug("\nСостояния системы вместе с очередями:")
         for state_id, state in enumerate(states):

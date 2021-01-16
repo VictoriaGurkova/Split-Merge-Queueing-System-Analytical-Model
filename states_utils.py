@@ -33,14 +33,14 @@ def get_fragments_lots(amount_of_demands,
         range(1, fragments_in_class + 1), amount_of_demands))
 
 
-def get_all_state_with_queues(server_states: set, queue_capacity: list):
+def get_all_state_with_queues(server_states: set, queue_capacity: list, params):
     states = []
     queue_states = set(itertools.product(range(queue_capacity[0] + 1),
                                          range(queue_capacity[1] + 1)))
 
     for q_state in queue_states:
         for server_state in server_states:
-            if is_possible_state(q_state, server_state):
+            if is_possible_state(q_state, server_state, params):
                 states.append((q_state, server_state))
     return states
 
