@@ -15,7 +15,7 @@ root_logger.addHandler(handler)
 if __name__ == '__main__':
     file = open('output/out.txt', 'w', encoding='utf-8')
 
-    # test for github №2
+    # test for github №3
     params = Params()
     qs = QueueingSystem(params)
     qs.calculate()
