@@ -55,6 +55,7 @@ def is_possible_state(q_state, state, params):
     return True
 
 
+# TODO: simplify
 def get_achievable_states(params, current_state):
     states_and_rates = defaultdict(float)
 

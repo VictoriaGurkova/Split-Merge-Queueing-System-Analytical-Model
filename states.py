@@ -17,6 +17,7 @@ class QueueingSystem:
         self.x = params.devices_amount // params.fragments_amounts[0]
         self.y = params.devices_amount // params.fragments_amounts[1]
 
+    # TODO: simplify/rewrite this
     def calculate(self):
         server_states = get_server_states(self.x, self.y, self.params)
         logger.debug("Состояния фрагментов на системах (не включая очереди):")
@@ -127,6 +128,7 @@ class QueueingSystem:
         self.data.failure_probability1 = probability_of_failure1
         self.data.failure_probability2 = probability_of_failure2
 
+    # TODO: where to move?
     def create_generator(self, states: list):
         n = len(states)
         Q = np.zeros((n, n))

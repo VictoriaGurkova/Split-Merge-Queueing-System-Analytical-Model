@@ -12,10 +12,10 @@ handler = logging.FileHandler('app.log', 'w', 'utf-8')  # or whatever
 handler.setFormatter(logging.Formatter('%(message)s'))  # or whatever
 root_logger.addHandler(handler)
 
+# TODO: fix this shit
 if __name__ == '__main__':
     file = open('output/out.txt', 'w', encoding='utf-8')
 
-    # test for github №3
     params = Params()
     qs = QueueingSystem(params)
     qs.calculate()

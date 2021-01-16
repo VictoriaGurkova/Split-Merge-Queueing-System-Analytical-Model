@@ -1,5 +1,6 @@
 class Params:
 
+    # TODO: rename queue_capacity
     def __init__(self, lambda1=1, lambda2=1, mu=3,
                  devices_amount=4, fragments_amounts=None,
                  queue_capacity=None):
