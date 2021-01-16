@@ -1,36 +1,12 @@
-import itertools
 
-empty_set_str = u"\u2205"
-
-
-def pretty_server_state(server_state):
-    elements = []
-    for s in server_state:
-        if len(s) == 0:
-            elements.append(empty_set_str)
-        else:
-            elements.append(str(s))
-    return '(' + \
-           ', '.join(elements).replace('(', '{').replace(',)', '}').replace(')', '}') \
-           + ')'
-
-
-def pretty_state(state):
-    queue_state = state[0]
-    server_state = state[1]
-    return '(' + str(queue_state) + ': ' + \
-           pretty_server_state(server_state) + ')'
-
-
-def get_fragments_lots(amount_of_demands,
-                       fragments_in_class):
-    return list(itertools.combinations_with_replacement(
-        range(1, fragments_in_class + 1), amount_of_demands))
-
-
-def create_state(q1, q2, first_class, second_class):
-    return (q1, q2), (tuple(sorted(first_class)),
-                      tuple(sorted(second_class)))
+def number_of_free_servers_for_server_state(params, server_state):
+    number = params.devices_amount - \
+             (len(server_state[0]) * params.fragments_amounts[0] +
+              len(server_state[1]) * params.fragments_amounts[1])
+    if number < 0:
+        raise Exception("Number of free servers for states < 0, "
+                        "it is not correct state")
+    return number
 
 
 def harmonic_sum(k: int):
