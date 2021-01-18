@@ -52,11 +52,12 @@ def check_possible_state(q_state, state, params):
 def get_achievable_states(params, current_state):
     states_and_rates = defaultdict(float)
 
+    # TODO: move to logs
     logger.debug('#' * 100)
     logger.debug('Рассмотрим состояние ' + pretty_state(current_state))
 
-    capacity1 = params.queue_capacity[0]
-    capacity2 = params.queue_capacity[1]
+    capacity1 = params.queues_capacities[0]
+    capacity2 = params.queues_capacities[1]
 
     # получаем различные характеристики состояния
     q1 = current_state[0][0]

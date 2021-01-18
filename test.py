@@ -29,7 +29,7 @@ class TestStates(unittest.TestCase):
                         fragments_amounts=[5, 2], queues_capacities=[8, 8])
         test_data = {
             "params": params,
-            "expected_rt": 1.9517,
+            "expected_rt": 1.9516,
             "expected_fp": 0.0631
         }
 

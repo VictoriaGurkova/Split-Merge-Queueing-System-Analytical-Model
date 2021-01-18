@@ -24,7 +24,7 @@ class QueueingSystem:
         for state_id, state in enumerate(server_states):
             logger.debug(f'S {state_id}= {pretty_server_state(state)}')
 
-        states = get_all_state_with_queues(server_states, self.params.queue_capacity, self.params)
+        states = get_all_state_with_queues(server_states, self.params.queues_capacities, self.params)
 
         logger.debug("\nСостояния системы вместе с очередями:")
         for state_id, state in enumerate(states):
@@ -87,12 +87,12 @@ class QueueingSystem:
                 (self.params.fragments_amounts[0] + self.params.fragments_amounts[1])
 
             # Вероятности отказа
-            if states[i][0][0] == self.params.queue_capacity[0]:
+            if states[i][0][0] == self.params.queues_capacities[0]:
                 probability_of_failure1 += p_i
-            if states[i][0][1] == self.params.queue_capacity[1]:
+            if states[i][0][1] == self.params.queues_capacities[1]:
                 probability_of_failure2 += p_i
-            if states[i][0][0] == self.params.queue_capacity[0] or \
-                    states[i][0][1] == self.params.queue_capacity[1]:
+            if states[i][0][0] == self.params.queues_capacities[0] or \
+                    states[i][0][1] == self.params.queues_capacities[1]:
                 probability_of_failure += p_i
 
         logger.debug(f"Check sum P_i: {sum(distr)}")
