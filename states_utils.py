@@ -65,18 +65,10 @@ def get_achievable_states(params, current_state):
         "free_devices_number": get_number_of_free_devices_for_server_state(params, current_state[1])
     }
 
-    # capacity1 = params.queues_capacities[0]
-    # capacity2 = params.queues_capacities[1]
-    # q1 = current_state[0][0]
-    # q2 = current_state[0][1]
-    # server_state = current_state[1]
-    # free_devices_number = \
-    #     get_number_of_free_devices_for_server_state(params, server_state)
-    #
-    # logger.debug(f'q1 = {q1}')
-    # logger.debug(f'q2 = {q2}')
-    # logger.debug(f'server_state = {server_state}')
-    # logger.debug(f"Число свободных приборов {free_devices_number}")
+    logger.debug(f'q1 = {state_config["q1"]}')
+    logger.debug(f'q2 = {state_config["q2"]}')
+    logger.debug(f'devices state = {state_config["devices"]}')
+    logger.debug(f'free devices number = {state_config["free_devices_number"]}')
 
     arrival_handler(params, state_config, states_and_rates)
     leaving_handler(params, state_config, states_and_rates)
@@ -239,7 +231,5 @@ def leaving_handler(params, state_config, states_and_rates):
                          f'требования второго класса с '
                          f'интенсивностью {leave_intensity} '
                          f'и переход в состояние {pretty_state(new_state)}')
+
             states_and_rates[new_state] += leave_intensity
-
-
-
