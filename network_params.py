@@ -14,3 +14,5 @@ class Params:
         self.fragments_amounts = fragments_amounts  # [a, b]
         self.queues_capacities = queues_capacities  # [c1, c2]
 
+    def get_lambda(self):
+        return self.lambda1 + self.lambda2

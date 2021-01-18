@@ -1,9 +1,8 @@
-import itertools
 import logging
 from collections import defaultdict
 
 from states_view import *
-from utils import number_of_free_servers_for_server_state
+from utils import *
 
 logger = logging.getLogger()
 
@@ -27,12 +26,6 @@ def get_server_states(x, y, params):
     return server_states
 
 
-def get_fragments_lots(amount_of_demands,
-                       fragments_in_class):
-    return list(itertools.combinations_with_replacement(
-        range(1, fragments_in_class + 1), amount_of_demands))
-
-
 def get_all_state_with_queues(server_states: set, queue_capacity: list, params):
     states = []
     queue_states = set(itertools.product(range(queue_capacity[0] + 1),
@@ -40,17 +33,17 @@ def get_all_state_with_queues(server_states: set, queue_capacity: list, params):
 
     for q_state in queue_states:
         for server_state in server_states:
-            if is_possible_state(q_state, server_state, params):
+            if check_possible_state(q_state, server_state, params):
                 states.append((q_state, server_state))
     return states
 
 
-def is_possible_state(q_state, state, params):
-    number_of_free_servers = \
-        number_of_free_servers_for_server_state(params, state)
-    if q_state[0] and number_of_free_servers >= params.fragments_amounts[0]:
+def check_possible_state(q_state, state, params):
+    free_devices_number = \
+        get_number_of_free_devices_for_server_state(params, state)
+    if q_state[0] and free_devices_number >= params.fragments_amounts[0]:
         return False
-    if q_state[1] and number_of_free_servers >= params.fragments_amounts[1]:
+    if q_state[1] and free_devices_number >= params.fragments_amounts[1]:
         return False
     return True
 
@@ -74,7 +67,7 @@ def get_achievable_states(params, current_state):
     logger.debug(f'server_state = {server_state}')
 
     number_of_free_servers = \
-        number_of_free_servers_for_server_state(params, server_state)
+        get_number_of_free_devices_for_server_state(params, server_state)
     logger.debug(f"Число свободных приборов {number_of_free_servers}")
 
     logger.debug("ПОСТУПЛЕНИЕ")
