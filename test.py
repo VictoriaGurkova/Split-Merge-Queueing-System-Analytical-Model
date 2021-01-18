@@ -14,7 +14,8 @@ def get_data(params):
 class TestStates(unittest.TestCase):
 
     def test_case1(self):
-        params = Params(1, 1, 3, 4, [2, 3], [5, 5])
+        params = Params(lambda1=1, lambda2=1, mu=3, devices_amount=4,
+                        fragments_amounts=[2, 3], queues_capacities=[5, 5])
         test_data = {
             "params": params,
             "expected_rt": 1.7833,
@@ -24,7 +25,8 @@ class TestStates(unittest.TestCase):
         self.compare_results(test_data)
 
     def test_case2(self):
-        params = Params(1.5, 1.5, 3.5, 7, [5, 2], [8, 8])
+        params = Params(lambda1=1.5, lambda2=1.5, mu=3.5, devices_amount=7,
+                        fragments_amounts=[5, 2], queues_capacities=[8, 8])
         test_data = {
             "params": params,
             "expected_rt": 1.9517,
