@@ -32,3 +32,16 @@ def log_arrival_on_devices(lambda_, state, class_id):
                  f'интенсивностью {lambda_} и '
                  f'немедленное начало его'
                  f' обслуживания и переход в состояние {pretty_state(state)}')
+
+
+def log_leaving_demand(mu, state, class_id):
+    logger.debug(f'Завершение обслуживания всего требования '
+                 f'{class_id} класса с интенсивностью {mu}, и '
+                 f'переход в состояние {pretty_state(state)}')
+
+
+def log_leaving_fragment(leave_intensity, state, class_id):
+    logger.debug(f'Завершение обслуживания фрагмента '
+                 f'требования {class_id} класса с '
+                 f'интенсивностью {leave_intensity}'
+                 f" переход в состояние {pretty_state(state)}")
