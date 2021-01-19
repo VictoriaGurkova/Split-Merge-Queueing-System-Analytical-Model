@@ -85,7 +85,7 @@ def arrival_handler_for_class(params, config, states_and_rates, class_id):
 def define_queue_state(q1, q2, devices, lambda1, lambda2, states_and_rates, class_id):
     if class_id == 1:
         update_queue_state(q1 + 1, q2, devices, lambda1, states_and_rates, class_id)
-    elif class_id == 2:
+    else:
         update_queue_state(q1, q2 + 1, devices, lambda2, states_and_rates, class_id)
 
 
@@ -98,7 +98,7 @@ def update_queue_state(q1, q2, devices, lambda_, states_and_rates, class_id):
 def define_devices_state(q1, q2, devices, lambda1, lambda2, states_and_rates, params, class_id):
     if class_id == 1:
         update_devices_state(q1, q2, devices, lambda1, states_and_rates, params, class_id)
-    elif class_id == 2:
+    else:
         update_devices_state(q1, q2, devices, lambda2, states_and_rates, params, class_id)
 
 
@@ -122,34 +122,13 @@ def leaving_handler(params, state_config, states_and_rates):
 def leaving_handler_for_class(state_config, states_and_rates, params, class_id):
     for index, unserved_fragments_number in \
             enumerate(state_config["devices"][class_id - 1]):
-        upd = {
-            "devices_state_class1": list(state_config["devices"][0]),
-            "devices_state_class2": list(state_config["devices"][1]),
-            "q1": state_config["q1"],
-            "q2": state_config["q2"],
-            "free_devices_number": state_config["free_devices_number"]
+        upd = get_upd_variables(state_config)
 
-        }
-        # требование уйдет полностью, если остался один фрагмент
         if unserved_fragments_number == 1:
-            if class_id == 1:
-                upd["devices_state_class1"].pop(index)
-            else:
-                upd["devices_state_class2"].pop(index)
-            if state_config["q1"]:
-                while upd["free_devices_number"] + \
-                        params.fragments_amounts[class_id - 1] >= \
-                        params.fragments_amounts[0] and upd["q1"]:
-                    upd["devices_state_class1"] += [params.fragments_amounts[0]]
-                    upd["q1"] -= 1
-                    upd["free_devices_number"] -= params.fragments_amounts[0]
-            if state_config["q2"]:
-                while upd["free_devices_number"] + \
-                        params.fragments_amounts[class_id - 1] >= \
-                        params.fragments_amounts[1] and upd["q2"]:
-                    upd["devices_state_class2"] += [params.fragments_amounts[1]]
-                    upd["q2"] -= 1
-                    upd["free_devices_number"] -= params.fragments_amounts[1]
+            upd[f"devices_state_class{class_id}"].pop(index)
+            update_system_state(state_config, upd, params, class_id, class_id_str="1")
+            update_system_state(state_config, upd, params, class_id, class_id_str="2")
+
             new_state = create_state(upd["q1"], upd["q2"],
                                      upd["devices_state_class1"],
                                      upd["devices_state_class2"])
@@ -172,6 +151,16 @@ def leaving_handler_for_class(state_config, states_and_rates, params, class_id):
             states_and_rates[new_state] += leave_intensity
 
 
+def update_system_state(config, upd, params, class_id, class_id_str):
+    if config["q" + class_id_str]:
+        while upd["free_devices_number"] + \
+                params.fragments_amounts[class_id - 1] >= \
+                params.fragments_amounts[int(class_id_str) - 1] and upd["q" + class_id_str]:
+            upd["devices_state_class" + class_id_str] += [params.fragments_amounts[int(class_id_str) - 1]]
+            upd["q" + class_id_str] -= 1
+            upd["free_devices_number"] -= params.fragments_amounts[int(class_id_str) - 1]
+
+
 def get_state_config(params, current_state):
     return {
         "capacity1": params.queues_capacities[0],
@@ -181,3 +170,13 @@ def get_state_config(params, current_state):
         "devices": current_state[1],
         "free_devices_number": get_number_of_free_devices_for_server_state(params, current_state[1])
     }
+
+
+def get_upd_variables(state_config):
+    return {
+        "devices_state_class1": list(state_config["devices"][0]),
+        "devices_state_class2": list(state_config["devices"][1]),
+        "q1": state_config["q1"],
+        "q2": state_config["q2"],
+        "free_devices_number": state_config["free_devices_number"]
+        }
