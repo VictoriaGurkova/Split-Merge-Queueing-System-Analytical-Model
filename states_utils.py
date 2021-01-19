@@ -1,6 +1,6 @@
-import logging
 from collections import defaultdict
 
+from logs import *
 from states_view import *
 from utils import *
 
@@ -48,27 +48,12 @@ def check_possible_state(q_state, state, params):
     return True
 
 
-# TODO: simplify
 def get_achievable_states(params, current_state):
+    log_state(current_state)
     states_and_rates = defaultdict(float)
 
-    # TODO: move to logs
-    logger.debug('#' * 100)
-    logger.debug('Рассмотрим состояние ' + pretty_state(current_state))
-
-    state_config = {
-        "capacity1": params.queues_capacities[0],
-        "capacity2": params.queues_capacities[1],
-        "q1": current_state[0][0],
-        "q2": current_state[0][1],
-        "devices": current_state[1],
-        "free_devices_number": get_number_of_free_devices_for_server_state(params, current_state[1])
-    }
-
-    logger.debug(f'q1 = {state_config["q1"]}')
-    logger.debug(f'q2 = {state_config["q2"]}')
-    logger.debug(f'devices state = {state_config["devices"]}')
-    logger.debug(f'free devices number = {state_config["free_devices_number"]}')
+    state_config = get_state_config(params, current_state)
+    log_state_config(state_config)
 
     arrival_handler(params, state_config, states_and_rates)
     leaving_handler(params, state_config, states_and_rates)
@@ -77,64 +62,56 @@ def get_achievable_states(params, current_state):
 
 
 def arrival_handler(params, state_config, states_and_rates):
-    logger.debug("ПОСТУПЛЕНИЕ")
+    log_message('Поступление')
+    arrival_handler_for_class(params, state_config, states_and_rates, 1)
+    arrival_handler_for_class(params, state_config, states_and_rates, 2)
 
-    if state_config["q1"] != state_config["capacity1"]:
-        if state_config["free_devices_number"] < params.fragments_amounts[0]:
-            new_state = create_state(state_config["q1"] + 1, state_config["q2"],
-                                     state_config["devices"][0],
-                                     state_config["devices"][1])
 
-            # TODO: move to logs
-            logger.debug(f'Поступление требования первого класса в '
-                         f'очередь с интенсивностью {params.lambda1} и '
-                         f'переход в стояние  {pretty_state(new_state)}')
-
-            states_and_rates[new_state] += params.lambda1
+def arrival_handler_for_class(params, config, states_and_rates, class_id):
+    if config[f"q{class_id}"] != config[f"capacity{class_id}"]:
+        if config["free_devices_number"] < params.fragments_amounts[class_id - 1]:
+            define_queue_state(config["q1"], config["q2"],
+                               [config["devices"][0], config["devices"][1]],
+                               params.lambda1, params.lambda2,
+                               states_and_rates, class_id)
         else:
-            updated_first_demands_tasks = state_config["devices"][0]
-            updated_first_demands_tasks += (params.fragments_amounts[0],)
-            new_state = create_state(state_config["q1"], state_config["q2"],
-                                     updated_first_demands_tasks,
-                                     state_config["devices"][1])
-
-            # TODO: move to logs
-            logger.debug(f'Поступление требования первого класса с '
-                         f'интенсивностью {params.lambda1} и '
-                         f'немедленное начало его'
-                         f' обслуживания и переход в состояние {pretty_state(new_state)}')
-
-            states_and_rates[new_state] += params.lambda1
+            define_devices_state(config["q1"], config["q2"],
+                                 [config["devices"][0], config["devices"][1]],
+                                 params.lambda1, params.lambda2,
+                                 states_and_rates, params, class_id)
     else:
-        logger.debug("Очередь заполнена - требование потерялось")
+        log_message('Очередь заполнена - требование потерялось')
 
-    if state_config["q2"] != state_config["capacity2"]:
-        if state_config["free_devices_number"] < params.fragments_amounts[1]:
-            new_state = create_state(state_config["q1"], state_config["q2"] + 1,
-                                     state_config["devices"][0],
-                                     state_config["devices"][1])
 
-            # TODO: move to logs
-            logger.debug(f'Поступление требования второго класса в очередь с '
-                         f'интенсивностью {params.lambda2} и '
-                         f'переход в стояние  {pretty_state(new_state)}')
+def define_queue_state(q1, q2, devices, lambda1, lambda2, states_and_rates, class_id):
+    if class_id == 1:
+        update_queue_state(q1 + 1, q2, devices, lambda1, states_and_rates, class_id)
+    elif class_id == 2:
+        update_queue_state(q1, q2 + 1, devices, lambda2, states_and_rates, class_id)
 
-            states_and_rates[new_state] += params.lambda2
-        else:
-            updated_second_demands_tasks = state_config["devices"][1]
-            updated_second_demands_tasks += (params.fragments_amounts[1],)
-            new_state = create_state(state_config["q1"], state_config["q2"], state_config["devices"][0],
-                                     updated_second_demands_tasks)
 
-            # TODO: move to logs
-            logger.debug(f'Поступление требования второго класса с '
-                         f'интенсивностью {params.lambda2} и '
-                         f'немедленное начало его обслуживания и '
-                         f'переход в состояние {pretty_state(new_state)}')
+def update_queue_state(q1, q2, devices, lambda_, states_and_rates, class_id):
+    state = create_state(q1, q2, devices[0], devices[1])
+    log_arrival_in_queue(lambda_, state, class_id)
+    states_and_rates[state] += lambda_
 
-            states_and_rates[new_state] += params.lambda2
-    else:
-        logger.debug("Очередь заполнена - требование потерялось")
+
+def define_devices_state(q1, q2, devices, lambda1, lambda2, states_and_rates, params, class_id):
+    if class_id == 1:
+        update_devices_state(q1, q2, devices, lambda1, states_and_rates, params, class_id)
+    elif class_id == 2:
+        update_devices_state(q1, q2, devices, lambda2, states_and_rates, params, class_id)
+
+
+def update_devices_state(q1, q2, devices, lambda_, states_and_rates, params, class_id):
+    upd_state = devices[class_id - 1]
+    upd_state += (params.fragments_amounts[class_id - 1],)
+
+    state = create_state(q1, q2, upd_state, devices[1]) if class_id == 1 \
+        else create_state(q1, q2, devices[0], upd_state)
+
+    log_arrival_on_devices(lambda_, state, class_id)
+    states_and_rates[state] += lambda_
 
 
 def leaving_handler(params, state_config, states_and_rates):
@@ -233,3 +210,14 @@ def leaving_handler(params, state_config, states_and_rates):
                          f'и переход в состояние {pretty_state(new_state)}')
 
             states_and_rates[new_state] += leave_intensity
+
+
+def get_state_config(params, current_state):
+    return {
+        "capacity1": params.queues_capacities[0],
+        "capacity2": params.queues_capacities[1],
+        "q1": current_state[0][0],
+        "q2": current_state[0][1],
+        "devices": current_state[1],
+        "free_devices_number": get_number_of_free_devices_for_server_state(params, current_state[1])
+    }
