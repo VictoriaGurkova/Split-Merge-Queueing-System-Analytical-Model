@@ -11,6 +11,7 @@ from utils import *
 logger = logging.getLogger()
 
 
+# TODO: make the main calculation class
 class QueueingSystem:
 
     def __init__(self, params: Params):
@@ -19,6 +20,3 @@ class QueueingSystem:
 
         self.x = params.devices_amount // params.fragments_amounts[0]
         self.y = params.devices_amount // params.fragments_amounts[1]
-
-
-
