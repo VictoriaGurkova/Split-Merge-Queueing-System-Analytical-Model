@@ -1,9 +1,18 @@
+import logging
+
 empty_set_str = u"\u2205"
 
+logger = logging.getLogger()
 
-def pretty_server_state(server_state):
+
+def print_states(states, func):
+    for state_id, state in enumerate(states):
+        logger.debug(f'S {state_id}= {func(state)}')
+
+
+def pretty_devices_state(devices_state):
     elements = []
-    for s in server_state:
+    for s in devices_state:
         if len(s) == 0:
             elements.append(empty_set_str)
         else:
@@ -14,7 +23,7 @@ def pretty_server_state(server_state):
 
 
 def pretty_state(state):
-    queue_state = state[0]
-    server_state = state[1]
-    return '(' + str(queue_state) + ': ' + \
-           pretty_server_state(server_state) + ')'
+    queues_state = state[0]
+    devices_state = state[1]
+    return '(' + str(queues_state) + ': ' + \
+           pretty_devices_state(devices_state) + ')'

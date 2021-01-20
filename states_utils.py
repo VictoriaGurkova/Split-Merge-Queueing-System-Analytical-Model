@@ -1,15 +1,13 @@
 from logs import *
 from utils import *
 
-logger = logging.getLogger()
-
 
 def create_state(q1, q2, first_class, second_class):
     return (q1, q2), (tuple(sorted(first_class)),
                       tuple(sorted(second_class)))
 
 
-def get_server_states(x, y, params):
+def get_devices_states(x, y, params):
     server_states = set()
     for i in range(x + 1):
         for j in range(y + 1):
