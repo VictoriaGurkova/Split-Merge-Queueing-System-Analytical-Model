@@ -1,11 +1,8 @@
-import numpy as np
-from scipy.linalg import expm
-
+from characteristics import Characteristics
 from data_store import PerformanceMeasures
+from generator import get_stationary_distribution
 from states_utils import *
 from states_view import *
-
-logger = logging.getLogger()
 
 
 class QueueingSystem:
@@ -13,137 +10,116 @@ class QueueingSystem:
     def __init__(self, params):
         self.params = params
         self.data = PerformanceMeasures()
+        self.characters = Characteristics()
 
         self.x = params.devices_amount // params.fragments_amounts[0]
         self.y = params.devices_amount // params.fragments_amounts[1]
 
     # TODO: simplify/rewrite this
     def calculate(self):
-        server_states = get_server_states(self.x, self.y, self.params)
-        logger.debug("Состояния фрагментов на системах (не включая очереди):")
-        for state_id, state in enumerate(server_states):
-            logger.debug(f'S {state_id}= {pretty_server_state(state)}')
 
-        states = get_all_state_with_queues(server_states, self.params.queues_capacities, self.params)
+        log_message('Состояния фрагментов на системах (не включая очереди):')
+        devices_states = get_devices_states(self.x, self.y, self.params)
+        print_states(devices_states, pretty_devices_state)
 
-        logger.debug("\nСостояния системы вместе с очередями:")
-        for state_id, state in enumerate(states):
-            logger.debug(f'S{state_id} = {pretty_state(state)}')
+        log_message('\nСостояния системы вместе с очередями:')
+        states = get_all_state_with_queues(devices_states, self.params.queues_capacities, self.params)
+        print_states(states, pretty_state)
 
-        Q = self.create_generator(states)
+        distribution = get_stationary_distribution(states, self.params)
 
-        logger.debug(f'Q = {Q}')
-        np.savetxt("output/Q.txt", Q, fmt='%0.0f')
+        log_message(f'Стационарное распределение P_i: {distribution}')
+        log_message(f'Check sum P_i: {sum(distribution)}')
 
-        distr = expm(Q * 100000000000)[0]
+        self.calculate_characters(distribution, states)
+        self.calculate_data()
 
-        average_queue1 = 0
-        average_queue2 = 0
+    def calculate_characters(self, distribution, states):
+        for state, state_prob in enumerate(distribution):
+            log_message(f'P[{pretty_state(states[state])}] = {state_prob}')
+            self.calculate_avg_queue(states, state, state_prob)
+            self.calculate_avg_free_devices(states, state, state_prob)
+            self.calculate_avg_free_devices_if_queues_not_empty(states, state, state_prob)
+            self.calculate_avg_demands_on_devices(states, state, state_prob)
+            self.calculate_failure_prob(states, state, state_prob)
 
-        average_free_servers = 0
-        average_free_servers_if_queues_not_empty = 0
+    def calculate_data(self):
+        norm_const = self.get_norm_const()
 
-        average_demands_on_devices1 = 0
-        average_demands_on_devices2 = 0
+        self.data.demands_count1 = self.characters.avg_queue1
+        self.data.demands_count2 = self.characters.avg_queue2
 
-        average_demands_on_devices = 0
+        effective_lambda1 = self.params.lambda1 * (1 - self.characters.failure_prob1)
+        effective_lambda2 = self.params.lambda2 * (1 - self.characters.failure_prob2)
 
-        probability_of_failure = 0
-        probability_of_failure1 = 0
-        probability_of_failure2 = 0
+        queue_waiting1 = self.characters.avg_queue1 / effective_lambda1
+        queue_waiting2 = self.characters.avg_queue2 / effective_lambda2
 
-        logger.debug(f'Стационарное распределение P_i: {distr}')
-        for i, p_i in enumerate(distr):
-            logger.debug(f'P[{pretty_state(states[i])}] = {p_i}')
-            average_queue1 += states[i][0][0] * p_i
-            average_queue2 += states[i][0][1] * p_i
+        # solution 1
+        self.data.response_time1 = queue_waiting1 + harmonic_sum(self.params.fragments_amounts[0]) / self.params.mu
+        self.data.response_time2 = queue_waiting2 + harmonic_sum(self.params.fragments_amounts[1]) / self.params.mu
 
-            # м.о. числа свободных приборов в системе
-            average_free_servers += \
+        # solution 2
+        # self.data.response_time1 = (self.data.demands_count1 + self.characters.avg_demands_on_devices1) / (
+        #     effective_lambda1)
+        # self.data.response_time2 = (self.data.demands_count2 + self.characters.avg_demands_on_devices2) / (
+        #     effective_lambda2)
+
+        self.data.response_time = (self.data.demands_count1 + self.data.demands_count2 +
+                                   self.characters.avg_demands_on_devices1 +
+                                   self.characters.avg_demands_on_devices2) / (effective_lambda1 + effective_lambda2)
+
+        self.data.failure_prob = self.characters.failure_prob
+        self.data.failure_prob1 = self.characters.failure_prob1
+        self.data.failure_prob2 = self.characters.failure_prob2
+
+    def calculate_avg_queue(self, states, state, state_prob):
+        self.characters.avg_queue1 += states[state][0][0] * state_prob
+        self.characters.avg_queue2 += states[state][0][1] * state_prob
+
+    def calculate_avg_free_devices(self, states, state, state_prob):
+        self.characters.avg_free_devices += \
+            (self.params.devices_amount -
+             (len(states[state][1][0]) * self.params.fragments_amounts[0] +
+              len(states[state][1][1]) * self.params.fragments_amounts[1])) * state_prob
+
+    def calculate_avg_free_devices_if_queues_not_empty(self, states, state, state_prob):
+        if states[state][0][0] + states[state][0][1] != 0:
+            self.characters.avg_free_devices_if_queues_not_empty += \
                 (self.params.devices_amount -
-                 (len(states[i][1][0]) * self.params.fragments_amounts[0] +
-                  len(states[i][1][1]) * self.params.fragments_amounts[1])) * p_i
+                 (len(states[state][1][0]) * self.params.fragments_amounts[0] +
+                  len(states[state][1][1]) * self.params.fragments_amounts[1])) * state_prob
 
-            # м.о. числа свободных приборов в системе при условии,
-            # что хотя бы одна очередь не пуста
-            if states[i][0][0] + states[i][0][1] != 0:
-                average_free_servers_if_queues_not_empty += \
-                    (self.params.devices_amount -
-                     (len(states[i][1][0]) * self.params.fragments_amounts[0] +
-                      len(states[i][1][1]) * self.params.fragments_amounts[1])) * p_i
+    def calculate_avg_demands_on_devices(self, states, state, state_prob):
+        self.characters.avg_demands_on_devices1 += \
+            (len(states[state][1][0]) * self.params.fragments_amounts[0] * state_prob) / \
+            self.params.fragments_amounts[0]
 
-            # м.о. числа требований на приборах для каждого класса
-            average_demands_on_devices1 += \
-                (len(states[i][1][0]) * self.params.fragments_amounts[0] * p_i) / \
-                self.params.fragments_amounts[0]
-            average_demands_on_devices2 += \
-                (len(states[i][1][1]) * self.params.fragments_amounts[1] * p_i) / \
-                self.params.fragments_amounts[1]
+        self.characters.avg_demands_on_devices2 += \
+            (len(states[state][1][1]) * self.params.fragments_amounts[1] * state_prob) / \
+            self.params.fragments_amounts[1]
 
-            # м.о. числа требований на приборах для обоих классов
-            average_demands_on_devices += \
-                ((len(states[i][1][0]) * self.params.fragments_amounts[0] +
-                  len(states[i][1][1]) * self.params.fragments_amounts[1]) * p_i) / \
-                (self.params.fragments_amounts[0] + self.params.fragments_amounts[1])
+        self.characters.avg_demands_on_devices += \
+            ((len(states[state][1][0]) * self.params.fragments_amounts[0] +
+              len(states[state][1][1]) * self.params.fragments_amounts[1]) * state_prob) / \
+            (self.params.fragments_amounts[0] + self.params.fragments_amounts[1])
 
-            # Вероятности отказа
-            if states[i][0][0] == self.params.queues_capacities[0]:
-                probability_of_failure1 += p_i
-            if states[i][0][1] == self.params.queues_capacities[1]:
-                probability_of_failure2 += p_i
-            if states[i][0][0] == self.params.queues_capacities[0] or \
-                    states[i][0][1] == self.params.queues_capacities[1]:
-                probability_of_failure += p_i
+    def calculate_failure_prob(self, states, state, state_prob):
+        if states[state][0][0] == self.params.queues_capacities[0]:
+            self.characters.failure_prob1 += state_prob
 
-        logger.debug(f"Check sum P_i: {sum(distr)}")
+        if states[state][0][1] == self.params.queues_capacities[1]:
+            self.characters.failure_prob2 += state_prob
 
-        p_first = self.params.lambda1 / (self.params.lambda1 + self.params.lambda2)
-        p_second = 1 - p_first
+        if states[state][0][0] == self.params.queues_capacities[0] or \
+                states[state][0][1] == self.params.queues_capacities[1]:
+            self.characters.failure_prob += state_prob
 
-        self.data.demands_count1 = average_queue1
-        self.data.demands_count2 = average_queue2
-
-        effective_lambda1 = self.params.lambda1 * (1 - probability_of_failure1)
-        effective_lambda2 = self.params.lambda2 * (1 - probability_of_failure2)
-
-        queue_waiting1 = average_queue1 / effective_lambda1
-        queue_waiting2 = average_queue2 / effective_lambda2
-
-        self.data.response_time1 = (self.data.demands_count1 + average_demands_on_devices1) / (
-            effective_lambda1)
-        # self.data.RT1 = queue_waiting1 + harmonic_sum(self.a) / self.mu
-
-        self.data.response_time2 = (self.data.demands_count2 + average_demands_on_devices2) / (
-            effective_lambda2)
-        # self.data.RT2 = queue_waiting2 + harmonic_sum(self.b) / self.mu
-
-        queue_waiting_prob1 = p_first * (1 - probability_of_failure1)
-        queue_waiting_prob2 = p_second * (1 - probability_of_failure2)
-        norm_const = 1 / (queue_waiting_prob1 + queue_waiting_prob2)
-
-        self.data.response_time = (self.data.demands_count1 + self.data.demands_count2 + average_demands_on_devices1 + average_demands_on_devices2) / (
-                effective_lambda1 + effective_lambda2)
-
-        self.data.failure_probability = probability_of_failure
-        self.data.failure_probability1 = probability_of_failure1
-        self.data.failure_probability2 = probability_of_failure2
-
-    # TODO: where to move?
-    def create_generator(self, states: list):
-        n = len(states)
-        Q = np.zeros((n, n))
-        # проходим по каждому состоянию и смотрим на его смежные
-        for i, current_state in enumerate(states):
-            states_and_rates = get_achievable_states(self.params, current_state)
-            for state, rate in states_and_rates.items():
-                # текущее состояние имеет номер i,
-                # смотрим на номер j смежного состояния
-                j = states.index(state)
-                # снова делаем += а не просто равно,
-                # чтобы не перетереть результаты перехода
-                Q[i, j] += rate
-
-        for i, row in enumerate(Q):
-            Q[i, i] = -sum(row)
-
-        return Q
+    def get_norm_const(self):
+        # begin ???
+        class1_prob = self.params.lambda1 / (self.params.lambda1 + self.params.lambda2)
+        class2_prob = 1 - class1_prob
+        queue_waiting_prob1 = class1_prob * (1 - self.characters.failure_prob1)
+        queue_waiting_prob2 = class2_prob * (1 - self.characters.failure_prob2)
+        return 1 / (queue_waiting_prob1 + queue_waiting_prob2)
+        # end ???

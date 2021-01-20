@@ -38,7 +38,7 @@ class TestStates(unittest.TestCase):
     def compare_results(self, data):
         result = get_data(data["params"])
         self.assertAlmostEqual(result.response_time, data["expected_rt"], places=6)
-        self.assertAlmostEqual(result.failure_probability, data["expected_fp"], places=6)
+        self.assertAlmostEqual(result.failure_prob, data["expected_fp"], places=6)
 
 
 if __name__ == '__main__':

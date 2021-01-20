@@ -1,6 +1,6 @@
 import logging
 
-from states_view import *
+from states_view import pretty_state
 
 logger = logging.getLogger()
 
