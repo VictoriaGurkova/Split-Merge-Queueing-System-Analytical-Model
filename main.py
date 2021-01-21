@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from network_params import Params
-from states import QueueingSystem
+from calculations import Calculations
 
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     file = open('output/out.txt', 'w', encoding='utf-8')
 
     params = Params()
-    qs = QueueingSystem(params)
+    qs = Calculations(params)
     qs.calculate()
 
     # k = 6
