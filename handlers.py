@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from states_utils import *
+from utils import *
 
 
 def get_achievable_states(params, current_state):
@@ -68,7 +68,9 @@ def leaving_handler_for_class(state_config, states_and_rates, params, class_id):
                 upd["devices_state_class1"][index] -= 1
             else:
                 upd["devices_state_class2"][index] -= 1
-            new_state = create_state(state_config["q1"], state_config["q2"], upd["devices_state_class1"],
+
+            new_state = create_state(state_config["q1"], state_config["q2"],
+                                     upd["devices_state_class1"],
                                      upd["devices_state_class2"])
 
             log_leaving_fragment(leave_intensity, new_state, class_id)
