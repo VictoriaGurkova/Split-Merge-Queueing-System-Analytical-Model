@@ -1,14 +1,14 @@
 import unittest
 
-from network_params import Params
 from calculations import Calculations
+from network_params import Params
 
 
 def get_characters(params):
-    system = Calculations(params)
-    system.calculate()
-    print(system.characters)
-    return system.characters
+    calculations = Calculations(params)
+    calculations.calculate()
+    print(calculations.characters)
+    return calculations.characters
 
 
 class TestStates(unittest.TestCase):

@@ -1,10 +1,7 @@
 import logging
 
-import matplotlib.pyplot as plt
-import numpy as np
-
-from network_params import Params
 from calculations import Calculations
+from network_params import Params
 
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
@@ -17,8 +14,8 @@ if __name__ == '__main__':
     file = open('output/out.txt', 'w', encoding='utf-8')
 
     params = Params()
-    qs = Calculations(params)
-    qs.calculate()
+    calculations = Calculations(params)
+    calculations.calculate()
 
     # k = 6
     # rt = np.zeros((k, k))
@@ -163,5 +160,5 @@ if __name__ == '__main__':
     #         file.write(s + '\t')
     #     file.write('\n')
     #
-    # file.close()
+    file.close()
     # print("executed")
