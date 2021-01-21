@@ -1,6 +1,6 @@
 from characteristics import Characteristics
 from generator import get_stationary_distribution
-from states_utils import *
+from utils import *
 from states_view import *
 
 
