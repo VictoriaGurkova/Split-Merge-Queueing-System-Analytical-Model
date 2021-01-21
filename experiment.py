@@ -1,7 +1,7 @@
-class Statistics:
+class Experiment:
 
     def __init__(self, lambdas: list):
-        self.lambdas = lambdas  # [lambda1, lambda2]
+        self.lambdas = lambdas
 
         self.response_time1 = []
         self.response_time2 = []
