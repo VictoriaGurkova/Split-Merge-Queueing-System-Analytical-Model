@@ -1,14 +1,14 @@
 import unittest
 
 from network_params import Params
-from states import QueueingSystem
+from calculations import Calculations
 
 
-def get_data(params):
-    system = QueueingSystem(params)
+def get_characters(params):
+    system = Calculations(params)
     system.calculate()
-    print(system.data)
-    return system.data
+    print(system.characters)
+    return system.characters
 
 
 class TestStates(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestStates(unittest.TestCase):
         self.compare_results(test_data)
 
     def compare_results(self, data):
-        result = get_data(data["params"])
+        result = get_characters(data["params"])
         self.assertAlmostEqual(result.response_time, data["expected_rt"], places=6)
         self.assertAlmostEqual(result.failure_prob, data["expected_fp"], places=6)
 
