@@ -29,7 +29,6 @@ class Calculations:
         log_message(f'Check sum P_i: {sum(distribution)}')
 
         self.calculate_characters(distribution, states)
-        self.calculate_response_time()
 
     def calculate_characters(self, distribution, states):
         for state, state_prob in enumerate(distribution):
@@ -39,6 +38,8 @@ class Calculations:
             self.calculate_avg_free_devices_if_queues_not_empty(states, state, state_prob)
             self.calculate_avg_demands_on_devices(states, state, state_prob)
             self.calculate_failure_prob(states, state, state_prob)
+
+        self.calculate_response_time()
 
     def calculate_response_time(self):
         effective_lambda1 = self.params.lambda1 * (1 - self.characters.failure_prob1)
