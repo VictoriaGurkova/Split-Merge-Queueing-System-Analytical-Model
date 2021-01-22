@@ -1,7 +1,8 @@
-# TODO: do something better
 import os
 
 import numpy as np
+
+from experiment.drawer import Drawer
 
 
 class Experiment:
@@ -18,6 +19,8 @@ class Experiment:
         self.failure_prob2 = np.zeros((k, k))
         self.avg_queue1 = np.zeros((k, k))
         self.avg_queue2 = np.zeros((k, k))
+
+        self.drawer = Drawer()
 
     def save(self, dependence_param):
         self.save_response_time(dependence_param)
