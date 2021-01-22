@@ -23,5 +23,5 @@ def create_generator(states, params):
 def get_stationary_distribution(states, params):
     generator = create_generator(states, params)
     log_message(f'Q = {generator}')
-    np.savetxt("output/Q.txt", generator, fmt='%0.0f')
+    np.savetxt("output/generator/Q.txt", generator, fmt='%0.0f')
     return expm(generator * 100000000000)[0]
