@@ -17,13 +17,13 @@ def get_achievable_states(params, current_state):
 
 
 def arrival_handler(params, state_config, states_and_rates):
-    log_message('Поступление')
+    log_message('ARRIVAL')
     arrival_handler_for_class(params, state_config, states_and_rates, class_id=1)
     arrival_handler_for_class(params, state_config, states_and_rates, class_id=2)
 
 
 def leaving_handler(params, state_config, states_and_rates):
-    log_message('УХОД')
+    log_message('LEAVING')
     leaving_handler_for_class(state_config, states_and_rates, params, class_id=1)
     leaving_handler_for_class(state_config, states_and_rates, params, class_id=2)
 
@@ -41,7 +41,7 @@ def arrival_handler_for_class(params, config, states_and_rates, class_id):
                                  params.lambda1, params.lambda2,
                                  states_and_rates, params, class_id)
     else:
-        log_message('Очередь заполнена - требование потерялось')
+        log_message('Queue is full - demand is lost')
 
 
 def leaving_handler_for_class(state_config, states_and_rates, params, class_id):

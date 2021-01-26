@@ -15,17 +15,17 @@ class Calculations:
 
     def calculate(self):
 
-        log_message('Состояния фрагментов на системах (не включая очереди):')
+        log_message('Fragment states on devices (not including queues):')
         devices_states = get_devices_states(self.x, self.y, self.params)
         print_states(devices_states, pretty_devices_state)
 
-        log_message('\nСостояния системы вместе с очередями:')
+        log_message('\nSystem states along with queues:')
         states = get_all_state_with_queues(devices_states, self.params.queues_capacities, self.params)
         print_states(states, pretty_state)
 
         distribution = get_stationary_distribution(states, self.params)
 
-        log_message(f'Стационарное распределение P_i: {distribution}')
+        log_message(f'Stationary distribution P_i: {distribution}')
         log_message(f'Check sum P_i: {sum(distribution)}')
 
         self.calculate_characters(distribution, states)

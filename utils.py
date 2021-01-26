@@ -58,8 +58,8 @@ def get_number_of_free_devices_for_server_state(params, server_state):
              (len(server_state[0]) * params.fragments_amounts[0] +
               len(server_state[1]) * params.fragments_amounts[1])
     if number < 0:
-        raise Exception("Number of free servers for states < 0, "
-                        "it is not correct state")
+        raise Exception('Number of free servers for states < 0, '
+                        'it is not correct state')
     return number
 
 
