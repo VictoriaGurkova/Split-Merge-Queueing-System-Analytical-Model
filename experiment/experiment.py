@@ -53,13 +53,13 @@ class Experiment:
         file.write("\n")
 
         for i in range(self.k):
-            file.write(str(dependence_param[i]) + "\t")
+            file.write("%4.1f  " % dependence_param[i])
             for j in range(self.k):
                 # file.write("|" + str(round(data[i][j], 4)) + "\t")
                 file.write("|" + "%8.4f  " % data[i][j])
-            file.write("\n" + "-" * 68 + "\n")
+            file.write("\n" + "-" * 70 + "\n")
 
-        file.write("\n" + "=" * 68 + "\n\n")
+        file.write("\n" + "=" * 70 + "\n\n")
 
     def clear(self):
         self.__init__(self.k)
