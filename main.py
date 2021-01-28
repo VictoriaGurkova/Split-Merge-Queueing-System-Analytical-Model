@@ -1,15 +1,8 @@
-import logging
-
 from calculations import Calculations
 from experiment.capacity_dependency import CapacityDependency
 from experiment.intensity_dependency import IntensityDependency
 from network_params import Params
 
-root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)
-handler = logging.FileHandler('app.log', 'w', 'utf-8')  # or whatever
-handler.setFormatter(logging.Formatter('%(message)s'))  # or whatever
-root_logger.addHandler(handler)
 
 if __name__ == '__main__':
     params = Params()

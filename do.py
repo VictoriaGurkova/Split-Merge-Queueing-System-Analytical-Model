@@ -3,18 +3,32 @@ import os
 import numpy as np
 
 from experiment.capacity_dependency import CapacityDependency
+from experiment.drawer import Drawer
 from experiment.intensity_dependency import IntensityDependency
 
-k = 6
-lambdas = list(np.linspace(0.5, 2, k))
+#
+# intensity = IntensityDependency()
+# intensity.save_results()
+#
+# capacity = CapacityDependency()
+# capacity.save_results()
+#
+#
+#
 
-intensity = IntensityDependency()
-intensity.save_results()
+x = np.linspace(0, 100, 100)
+y1 = np.linspace(0, 1000, 100)
+y2 = np.linspace(0, 500, 100)
+value = 0
 
-capacity = CapacityDependency()
-capacity.save_results()
+label = {
+    'x': 'lambda',
+    'y': 'RT'
+}
 
-print(os.getcwd())
+drawer = Drawer()
+drawer.draw_compare_graphics(x, [y1, y2], value, "Test", label)
+
 
 # plt.plot(lambdas, rt[2], 'b')
 # plt.plot(lambdas, [r[2] for r in rt], 'r')
