@@ -3,6 +3,10 @@ import logging
 from states_view import pretty_state
 
 logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler('app.log', 'w', 'utf-8')  # or whatever
+handler.setFormatter(logging.Formatter('%(message)s'))  # or whatever
+logger.addHandler(handler)
 
 
 def log_network_configuration(params):

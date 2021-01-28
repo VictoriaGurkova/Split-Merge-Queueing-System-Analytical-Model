@@ -5,8 +5,6 @@ import numpy as np
 from experiment.capacity_dependency import CapacityDependency
 from experiment.intensity_dependency import IntensityDependency
 
-k = 6
-lambdas = list(np.linspace(0.5, 2, k))
 
 intensity = IntensityDependency()
 intensity.save_results()
@@ -14,7 +12,9 @@ intensity.save_results()
 capacity = CapacityDependency()
 capacity.save_results()
 
-print(os.getcwd())
+
+
+
 
 # plt.plot(lambdas, rt[2], 'b')
 # plt.plot(lambdas, [r[2] for r in rt], 'r')

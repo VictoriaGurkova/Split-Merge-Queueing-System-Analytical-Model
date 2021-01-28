@@ -11,14 +11,15 @@ class Experiment:
         self.k = k
         self.name = name
 
-        self.response_time = np.random.sample((k, k))
-        self.response_time1 = np.zeros((k, k))
-        self.response_time2 = np.zeros((k, k))
-        self.failure_prob = np.zeros((k, k))
-        self.failure_prob1 = np.zeros((k, k))
-        self.failure_prob2 = np.zeros((k, k))
-        self.avg_queue1 = np.zeros((k, k))
-        self.avg_queue2 = np.zeros((k, k))
+        # TODO: zeros
+        self.response_time = np.random.randint(0, 20, (k, k))
+        self.response_time1 = np.random.randint(0, 20, (k, k))
+        self.response_time2 = np.random.randint(0, 20, (k, k))
+        self.failure_prob = np.random.randint(0, 20, (k, k))
+        self.failure_prob1 = np.random.randint(0, 20, (k, k))
+        self.failure_prob2 = np.random.randint(0, 20, (k, k))
+        self.avg_queue1 = np.random.randint(0, 20, (k, k))
+        self.avg_queue2 = np.random.randint(0, 20, (k, k))
 
         self.drawer = Drawer()
 
@@ -45,19 +46,20 @@ class Experiment:
             self.write_to_file(file, "Average queue size 2", self.avg_queue2, dependence_param)
 
     def write_to_file(self, file, title, data, dependence_param):
-        file.write(f"==={title}\n")
+        file.write(f"=== {title} ===\n")
 
         for value in dependence_param:
-            file.write("%8.1f" % value)
+            file.write("%11.1f" % value)
         file.write("\n")
 
         for i in range(self.k):
             file.write(str(dependence_param[i]) + "\t")
             for j in range(self.k):
-                file.write("|" + str(round(data[i][j], 4)) + "\t")
-            file.write("\n" + "-" * 51 + "\n")
+                # file.write("|" + str(round(data[i][j], 4)) + "\t")
+                file.write("|" + "%8.4f  " % data[i][j])
+            file.write("\n" + "-" * 68 + "\n")
 
-        file.write("=" * 51 + "\n\n")
+        file.write("\n" + "=" * 68 + "\n\n")
 
     def clear(self):
         self.__init__(self.k)
