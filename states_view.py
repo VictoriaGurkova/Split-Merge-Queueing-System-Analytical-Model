@@ -7,7 +7,7 @@ logger = logging.getLogger()
 
 def print_states(states, func):
     for state_id, state in enumerate(states):
-        logger.debug(f'S {state_id}= {func(state)}')
+        logger.debug(f'S({state_id}) = {func(state)}')
 
 
 def pretty_devices_state(devices_state):

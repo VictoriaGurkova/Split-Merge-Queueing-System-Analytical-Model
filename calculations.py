@@ -14,6 +14,7 @@ class Calculations:
         self.y = params.devices_amount // params.fragments_amounts[1]
 
     def calculate(self):
+        log_network_configuration(self.params)
 
         log_message('Fragment states on devices (not including queues):')
         devices_states = get_devices_states(self.x, self.y, self.params)
@@ -25,7 +26,7 @@ class Calculations:
 
         distribution = get_stationary_distribution(states, self.params)
 
-        log_message(f'Stationary distribution P_i: {distribution}')
+        log_message(f'Stationary distribution P_i:\n {distribution}')
         log_message(f'Check sum P_i: {sum(distribution)}')
 
         self.calculate_characters(distribution, states)
