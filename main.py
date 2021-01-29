@@ -31,6 +31,8 @@ if __name__ == '__main__':
             intensity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
 
     intensity_dep.save_results()
+    intensity_dep.draw_rt()
+    intensity_dep.draw_fp()
 
     print("Зависимость от длины очередей:")
     capacity_dep = CapacityDependency()

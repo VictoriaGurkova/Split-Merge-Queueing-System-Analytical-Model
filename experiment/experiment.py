@@ -11,15 +11,14 @@ class Experiment:
         self.k = k
         self.name = name
 
-        # TODO: zeros
-        self.response_time = np.random.randint(0, 20, (k, k))
-        self.response_time1 = np.random.randint(0, 20, (k, k))
-        self.response_time2 = np.random.randint(0, 20, (k, k))
-        self.failure_prob = np.random.randint(0, 20, (k, k))
-        self.failure_prob1 = np.random.randint(0, 20, (k, k))
-        self.failure_prob2 = np.random.randint(0, 20, (k, k))
-        self.avg_queue1 = np.random.randint(0, 20, (k, k))
-        self.avg_queue2 = np.random.randint(0, 20, (k, k))
+        self.response_time = np.zeros((k, k))
+        self.response_time1 = np.zeros((k, k))
+        self.response_time2 = np.zeros((k, k))
+        self.failure_prob = np.zeros((k, k))
+        self.failure_prob1 = np.zeros((k, k))
+        self.failure_prob2 = np.zeros((k, k))
+        self.avg_queue1 = np.zeros((k, k))
+        self.avg_queue2 = np.zeros((k, k))
 
         self.drawer = Drawer()
 
@@ -55,7 +54,6 @@ class Experiment:
         for i in range(self.k):
             file.write("%4.1f  " % dependence_param[i])
             for j in range(self.k):
-                # file.write("|" + str(round(data[i][j], 4)) + "\t")
                 file.write("|" + "%8.4f  " % data[i][j])
             file.write("\n" + "-" * 70 + "\n")
 

@@ -5,7 +5,7 @@ class Params:
                  queues_capacities=None):
 
         if fragments_amounts is None:
-            fragments_amounts = [2, 3]
+            fragments_amounts = [2, 2]
         if queues_capacities is None:
             queues_capacities = [5, 5]
 
