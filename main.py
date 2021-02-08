@@ -1,7 +1,6 @@
 from calculations import Calculations
 from network_params import Params
 
-
 if __name__ == '__main__':
     params = Params()
     calculations = Calculations(params)
@@ -9,5 +8,4 @@ if __name__ == '__main__':
     calculations.calculate()
     calculations.characters.show_all()
 
-    print("executed")
-
+    print("executed") #test flake8
