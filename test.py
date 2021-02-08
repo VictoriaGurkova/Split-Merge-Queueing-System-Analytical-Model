@@ -18,8 +18,8 @@ class TestStates(unittest.TestCase):
                         fragments_amounts=[2, 3], queues_capacities=[5, 5])
         test_data = {
             "params": params,
-            "expected_rt": 1.783289,
-            "expected_fp": 0.112241
+            "expected_rt": 1.7832,
+            "expected_fp": 0.1122
         }
 
         self.compare_results(test_data)
@@ -29,16 +29,16 @@ class TestStates(unittest.TestCase):
                         fragments_amounts=[5, 2], queues_capacities=[8, 8])
         test_data = {
             "params": params,
-            "expected_rt": 1.951698,
-            "expected_fp": 0.063094
+            "expected_rt": 1.9515,
+            "expected_fp": 0.0630
         }
 
         self.compare_results(test_data)
 
     def compare_results(self, data):
         result = get_characters(data["params"])
-        self.assertAlmostEqual(result.response_time, data["expected_rt"], places=6)
-        self.assertAlmostEqual(result.failure_prob, data["expected_fp"], places=6)
+        self.assertAlmostEqual(result.response_time, data["expected_rt"], places=3)
+        self.assertAlmostEqual(result.failure_prob, data["expected_fp"], places=3)
 
 
 if __name__ == '__main__':
