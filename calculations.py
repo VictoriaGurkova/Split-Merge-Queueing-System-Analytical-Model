@@ -1,18 +1,19 @@
 from characteristics import Characteristics
 from generator import get_stationary_distribution
 from logs import log_network_configuration, log_message
+from network_params import Params
 from states_view import print_states, pretty_devices_state, pretty_state
 from utils import get_devices_states, get_all_state_with_queues, harmonic_sum
 
 
 class Calculations:
 
-    def __init__(self, params):
+    def __init__(self, params: Params):
         self.params = params
         self.characters = Characteristics()
 
-        self.x = params.devices_amount // params.fragments_amounts[0]
-        self.y = params.devices_amount // params.fragments_amounts[1]
+        self.x = params.servers_number // params.fragments_numbers[0]
+        self.y = params.servers_number // params.fragments_numbers[1]
 
     def calculate(self):
         log_network_configuration(self.params)
@@ -60,9 +61,9 @@ class Calculations:
 
     def calculate_response_time_solution1(self, queue_waiting1, queue_waiting2):
         self.characters.response_time1 = queue_waiting1 + harmonic_sum(
-            self.params.fragments_amounts[0]) / self.params.mu
+            self.params.fragments_numbers[0]) / self.params.mu
         self.characters.response_time2 = queue_waiting2 + harmonic_sum(
-            self.params.fragments_amounts[1]) / self.params.mu
+            self.params.fragments_numbers[1]) / self.params.mu
 
     def calculate_response_time_solution2(self, effective_lambda1, effective_lambda2):
         self.characters.response_time1 = (self.characters.avg_queue1 + self.characters.avg_demands_on_devices1) / (
@@ -76,30 +77,30 @@ class Calculations:
 
     def calculate_avg_free_devices(self, states, state, state_prob):
         self.characters.avg_free_devices += \
-            (self.params.devices_amount -
-             (len(states[state][1][0]) * self.params.fragments_amounts[0] +
-              len(states[state][1][1]) * self.params.fragments_amounts[1])) * state_prob
+            (self.params.servers_number -
+             (len(states[state][1][0]) * self.params.fragments_numbers[0] +
+              len(states[state][1][1]) * self.params.fragments_numbers[1])) * state_prob
 
     def calculate_avg_free_devices_if_queues_not_empty(self, states, state, state_prob):
         if states[state][0][0] + states[state][0][1] != 0:
             self.characters.avg_free_devices_if_queues_not_empty += \
-                (self.params.devices_amount -
-                 (len(states[state][1][0]) * self.params.fragments_amounts[0] +
-                  len(states[state][1][1]) * self.params.fragments_amounts[1])) * state_prob
+                (self.params.servers_number -
+                 (len(states[state][1][0]) * self.params.fragments_numbers[0] +
+                  len(states[state][1][1]) * self.params.fragments_numbers[1])) * state_prob
 
     def calculate_avg_demands_on_devices(self, states, state, state_prob):
         self.characters.avg_demands_on_devices1 += \
-            (len(states[state][1][0]) * self.params.fragments_amounts[0] * state_prob) / \
-            self.params.fragments_amounts[0]
+            (len(states[state][1][0]) * self.params.fragments_numbers[0] * state_prob) / \
+            self.params.fragments_numbers[0]
 
         self.characters.avg_demands_on_devices2 += \
-            (len(states[state][1][1]) * self.params.fragments_amounts[1] * state_prob) / \
-            self.params.fragments_amounts[1]
+            (len(states[state][1][1]) * self.params.fragments_numbers[1] * state_prob) / \
+            self.params.fragments_numbers[1]
 
         self.characters.avg_demands_on_devices += \
-            ((len(states[state][1][0]) * self.params.fragments_amounts[0] +
-              len(states[state][1][1]) * self.params.fragments_amounts[1]) * state_prob) / \
-            (self.params.fragments_amounts[0] + self.params.fragments_amounts[1])
+            ((len(states[state][1][0]) * self.params.fragments_numbers[0] +
+              len(states[state][1][1]) * self.params.fragments_numbers[1]) * state_prob) / \
+            (self.params.fragments_numbers[0] + self.params.fragments_numbers[1])
 
     def calculate_failure_prob(self, states, state, state_prob):
         if states[state][0][0] == self.params.queues_capacities[0]:

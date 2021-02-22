@@ -1,6 +1,7 @@
 import itertools
 
 from logs import log_arrival_in_queue, log_arrival_on_devices
+from network_params import Params
 
 
 def harmonic_sum(k: int):
@@ -17,21 +18,21 @@ def create_state(q1, q2, first_class, second_class):
                       tuple(sorted(second_class)))
 
 
-def get_devices_states(x, y, params):
+def get_devices_states(x, y, params: Params):
     server_states = set()
     for i in range(x + 1):
         for j in range(y + 1):
-            total_number_of_tasks = params.fragments_amounts[0] * i + \
-                                    params.fragments_amounts[1] * j
-            if params.devices_amount < total_number_of_tasks:
+            total_number_of_tasks = params.fragments_numbers[0] * i + \
+                                    params.fragments_numbers[1] * j
+            if params.servers_number < total_number_of_tasks:
                 continue
-            X = sorted(get_fragments_lots(i, params.fragments_amounts[0]))
-            Y = sorted(get_fragments_lots(j, params.fragments_amounts[1]))
+            X = sorted(get_fragments_lots(i, params.fragments_numbers[0]))
+            Y = sorted(get_fragments_lots(j, params.fragments_numbers[1]))
             server_states.update(itertools.product(X, Y))
     return server_states
 
 
-def get_all_state_with_queues(server_states: set, queues_capacities: list, params):
+def get_all_state_with_queues(server_states: set, queues_capacities: list, params: Params):
     states = []
     queue_states = set(itertools.product(range(queues_capacities[0] + 1),
                                          range(queues_capacities[1] + 1)))
@@ -43,20 +44,20 @@ def get_all_state_with_queues(server_states: set, queues_capacities: list, param
     return states
 
 
-def check_possible_state(q_state, state, params):
+def check_possible_state(q_state, state, params: Params):
     free_devices_number = \
         get_number_of_free_devices_for_server_state(params, state)
-    if q_state[0] and free_devices_number >= params.fragments_amounts[0]:
+    if q_state[0] and free_devices_number >= params.fragments_numbers[0]:
         return False
-    if q_state[1] and free_devices_number >= params.fragments_amounts[1]:
+    if q_state[1] and free_devices_number >= params.fragments_numbers[1]:
         return False
     return True
 
 
-def get_number_of_free_devices_for_server_state(params, server_state):
-    number = params.devices_amount - \
-             (len(server_state[0]) * params.fragments_amounts[0] +
-              len(server_state[1]) * params.fragments_amounts[1])
+def get_number_of_free_devices_for_server_state(params: Params, server_state):
+    number = params.servers_number - \
+             (len(server_state[0]) * params.fragments_numbers[0] +
+              len(server_state[1]) * params.fragments_numbers[1])
     if number < 0:
         raise Exception('Number of free servers for states < 0, '
                         'it is not correct state')
@@ -83,9 +84,9 @@ def define_devices_state(q1, q2, devices, lambda1, lambda2, states_and_rates, pa
         update_devices_state(q1, q2, devices, lambda2, states_and_rates, params, class_id)
 
 
-def update_devices_state(q1, q2, devices, lambda_, states_and_rates, params, class_id):
+def update_devices_state(q1, q2, devices, lambda_, states_and_rates, params: Params, class_id):
     upd_state = devices[class_id - 1]
-    upd_state += (params.fragments_amounts[class_id - 1],)
+    upd_state += (params.fragments_numbers[class_id - 1],)
 
     state = create_state(q1, q2, upd_state, devices[1]) if class_id == 1 \
         else create_state(q1, q2, devices[0], upd_state)
@@ -94,17 +95,17 @@ def update_devices_state(q1, q2, devices, lambda_, states_and_rates, params, cla
     states_and_rates[state] += lambda_
 
 
-def update_system_state(config, upd, params, class_id, class_id_str):
+def update_system_state(config, upd, params: Params, class_id, class_id_str):
     if config["q" + class_id_str]:
         while upd["free_devices_number"] + \
-                params.fragments_amounts[class_id - 1] >= \
-                params.fragments_amounts[int(class_id_str) - 1] and upd["q" + class_id_str]:
-            upd["devices_state_class" + class_id_str] += [params.fragments_amounts[int(class_id_str) - 1]]
+                params.fragments_numbers[class_id - 1] >= \
+                params.fragments_numbers[int(class_id_str) - 1] and upd["q" + class_id_str]:
+            upd["devices_state_class" + class_id_str] += [params.fragments_numbers[int(class_id_str) - 1]]
             upd["q" + class_id_str] -= 1
-            upd["free_devices_number"] -= params.fragments_amounts[int(class_id_str) - 1]
+            upd["free_devices_number"] -= params.fragments_numbers[int(class_id_str) - 1]
 
 
-def get_state_config(params, current_state):
+def get_state_config(params: Params, current_state):
     return {
         "capacity1": params.queues_capacities[0],
         "capacity2": params.queues_capacities[1],

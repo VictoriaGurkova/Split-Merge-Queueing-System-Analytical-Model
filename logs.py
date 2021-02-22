@@ -1,5 +1,6 @@
 import logging
 
+from network_params import Params
 from states_view import pretty_state
 
 logger = logging.getLogger()
@@ -9,14 +10,14 @@ handler.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(handler)
 
 
-def log_network_configuration(params):
+def log_network_configuration(params: Params):
     # TODO: расписать параметры системы
     logger.debug('Network configuration:')
     logger.debug(f'lambda 1 = {params.lambda1}')
     logger.debug(f'lambda 2 = {params.lambda2}')
     logger.debug(f'mu = {params.mu}')
-    logger.debug(f'devices amount = {params.devices_amount}')
-    logger.debug(f'fragments amounts = {params.fragments_amounts}')
+    logger.debug(f'devices amount = {params.servers_number}')
+    logger.debug(f'fragments amounts = {params.fragments_numbers}')
     logger.debug(f'queues capacities = {params.queues_capacities}')
 
 

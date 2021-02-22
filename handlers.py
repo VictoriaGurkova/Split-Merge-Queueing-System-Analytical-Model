@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from logs import log_state, log_state_config, log_event, log_lost_demand, log_leaving_demand, log_leaving_fragment
+from network_params import Params
 from utils import get_state_config, define_queue_state, define_devices_state, get_upd_variables, update_system_state, \
     create_state
 
@@ -30,9 +31,9 @@ def leaving_handler(params, state_config, states_and_rates):
     leaving_handler_for_class(state_config, states_and_rates, params, class_id=2)
 
 
-def arrival_handler_for_class(params, config, states_and_rates, class_id):
+def arrival_handler_for_class(params: Params, config, states_and_rates, class_id):
     if config[f"q{class_id}"] != config[f"capacity{class_id}"]:
-        if config["free_devices_number"] < params.fragments_amounts[class_id - 1]:
+        if config["free_devices_number"] < params.fragments_numbers[class_id - 1]:
             define_queue_state(config["q1"], config["q2"],
                                [config["devices"][0], config["devices"][1]],
                                params.lambda1, params.lambda2,
