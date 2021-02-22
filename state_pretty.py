@@ -5,12 +5,12 @@ empty_set_str = u"\u2205"
 logger = logging.getLogger()
 
 
-def print_states(states, func):
+def print_states(states: list, func) -> None:
     for state_id, state in enumerate(states):
         logger.debug(f'S({state_id}) = {func(state)}')
 
 
-def pretty_devices_state(devices_state):
+def pretty_devices_state(devices_state: list) -> str:
     elements = []
     for s in devices_state:
         if len(s) == 0:
@@ -22,7 +22,7 @@ def pretty_devices_state(devices_state):
            + ')'
 
 
-def pretty_state(state):
+def pretty_state(state: [list, set]) -> str:
     queues_state = state[0]
     devices_state = state[1]
     return '(' + str(queues_state) + ': ' + \

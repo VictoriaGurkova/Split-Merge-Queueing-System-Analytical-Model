@@ -9,6 +9,6 @@ if __name__ == '__main__':
     calculations = Calculations(params)
 
     calculations.calculate()
-    calculations.characters.show_all()
+    print(calculations.characters)
 
     print("executed")

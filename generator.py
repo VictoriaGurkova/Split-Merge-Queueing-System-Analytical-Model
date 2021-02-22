@@ -1,11 +1,28 @@
+from collections import defaultdict
+
 import numpy as np
 from scipy.linalg import expm
 
-from handlers import get_achievable_states
-from logs import log_message
+from handlers import arrival_handler, leaving_handler
+from logs import log_message, log_state, log_state_config
+from network_params import Params
+from state_functional import get_state_config
 
 
-def create_generator(states, params):
+def get_achievable_states(params: Params, current_state: list) -> defaultdict:
+    log_state(current_state)
+    states_and_rates = defaultdict(float)
+
+    state_config = get_state_config(params, current_state)
+    log_state_config(state_config)
+
+    arrival_handler(params, state_config, states_and_rates)
+    leaving_handler(params, state_config, states_and_rates)
+
+    return states_and_rates
+
+
+def create_generator(states: list, params: Params) -> np.ndarray:
     n = len(states)
     generator = np.zeros((n, n))
     for i, current_state in enumerate(states):
@@ -20,7 +37,7 @@ def create_generator(states, params):
     return generator
 
 
-def get_stationary_distribution(states, params):
+def get_stationary_distribution(states: list, params: Params) -> list:
     generator = create_generator(states, params)
     log_message(f'Q = {generator}')
     np.savetxt("output/generator/Q.txt", generator, fmt='%0.0f')
