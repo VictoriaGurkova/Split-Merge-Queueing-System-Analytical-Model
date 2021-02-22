@@ -1,7 +1,7 @@
 import logging
 
 from network_params import Params
-from states_view import pretty_state
+from state_pretty import pretty_state
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

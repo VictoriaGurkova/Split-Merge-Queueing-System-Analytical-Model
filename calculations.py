@@ -1,9 +1,10 @@
+import itertools
+
 from characteristics import Characteristics
 from generator import get_stationary_distribution
 from logs import log_network_configuration, log_message
 from network_params import Params
-from states_view import print_states, pretty_devices_state, pretty_state
-from utils import get_devices_states, get_all_state_with_queues, harmonic_sum
+from state_pretty import print_states, pretty_devices_state, pretty_state
 
 
 class Calculations:
@@ -57,7 +58,7 @@ class Calculations:
         self.characters.response_time = (self.characters.avg_queue1 + self.characters.avg_queue2 +
                                          self.characters.avg_demands_on_devices1 +
                                          self.characters.avg_demands_on_devices2) / (
-                                                    effective_lambda1 + effective_lambda2)
+                                                effective_lambda1 + effective_lambda2)
 
     def calculate_response_time_solution1(self, queue_waiting1, queue_waiting2):
         self.characters.response_time1 = queue_waiting1 + harmonic_sum(
@@ -119,3 +120,58 @@ class Calculations:
         queue_waiting_probability1 = class1_probability * (1 - self.characters.failure_probability1)
         queue_waiting_probability2 = class2_probability * (1 - self.characters.failure_probability2)
         return 1 / (queue_waiting_probability1 + queue_waiting_probability2)
+
+
+def harmonic_sum(k: int):
+    return sum(1 / i for i in range(1, k + 1))
+
+
+def get_devices_states(x, y, params: Params):
+    server_states = set()
+    for i in range(x + 1):
+        for j in range(y + 1):
+            total_number_of_tasks = params.fragments_numbers[0] * i + \
+                                    params.fragments_numbers[1] * j
+            if params.servers_number < total_number_of_tasks:
+                continue
+            X = sorted(get_fragments_lots(i, params.fragments_numbers[0]))
+            Y = sorted(get_fragments_lots(j, params.fragments_numbers[1]))
+            server_states.update(itertools.product(X, Y))
+    return server_states
+
+
+def get_fragments_lots(amount_of_demands, fragments_in_class):
+    return list(itertools.combinations_with_replacement(
+        range(1, fragments_in_class + 1), amount_of_demands))
+
+
+def get_all_state_with_queues(server_states: set, queues_capacities: list, params: Params):
+    states = []
+    queue_states = set(itertools.product(range(queues_capacities[0] + 1),
+                                         range(queues_capacities[1] + 1)))
+
+    for q_state in queue_states:
+        for server_state in server_states:
+            if check_possible_state(q_state, server_state, params):
+                states.append((q_state, server_state))
+    return states
+
+
+def check_possible_state(q_state, state, params: Params):
+    free_devices_number = \
+        get_number_of_free_devices_for_server_state(params, state)
+    if q_state[0] and free_devices_number >= params.fragments_numbers[0]:
+        return False
+    if q_state[1] and free_devices_number >= params.fragments_numbers[1]:
+        return False
+    return True
+
+
+def get_number_of_free_devices_for_server_state(params: Params, server_state):
+    number = params.servers_number - \
+             (len(server_state[0]) * params.fragments_numbers[0] +
+              len(server_state[1]) * params.fragments_numbers[1])
+    if number < 0:
+        raise Exception('Number of free servers for states < 0, '
+                        'it is not correct state')
+    return number

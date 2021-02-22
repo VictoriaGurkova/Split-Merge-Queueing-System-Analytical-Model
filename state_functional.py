@@ -1,67 +1,5 @@
-import itertools
-
 from logs import log_arrival_in_queue, log_arrival_on_devices
 from network_params import Params
-
-
-def harmonic_sum(k: int):
-    return sum(1 / i for i in range(1, k + 1))
-
-
-def get_fragments_lots(amount_of_demands, fragments_in_class):
-    return list(itertools.combinations_with_replacement(
-        range(1, fragments_in_class + 1), amount_of_demands))
-
-
-def create_state(q1, q2, first_class, second_class):
-    return (q1, q2), (tuple(sorted(first_class)),
-                      tuple(sorted(second_class)))
-
-
-def get_devices_states(x, y, params: Params):
-    server_states = set()
-    for i in range(x + 1):
-        for j in range(y + 1):
-            total_number_of_tasks = params.fragments_numbers[0] * i + \
-                                    params.fragments_numbers[1] * j
-            if params.servers_number < total_number_of_tasks:
-                continue
-            X = sorted(get_fragments_lots(i, params.fragments_numbers[0]))
-            Y = sorted(get_fragments_lots(j, params.fragments_numbers[1]))
-            server_states.update(itertools.product(X, Y))
-    return server_states
-
-
-def get_all_state_with_queues(server_states: set, queues_capacities: list, params: Params):
-    states = []
-    queue_states = set(itertools.product(range(queues_capacities[0] + 1),
-                                         range(queues_capacities[1] + 1)))
-
-    for q_state in queue_states:
-        for server_state in server_states:
-            if check_possible_state(q_state, server_state, params):
-                states.append((q_state, server_state))
-    return states
-
-
-def check_possible_state(q_state, state, params: Params):
-    free_devices_number = \
-        get_number_of_free_devices_for_server_state(params, state)
-    if q_state[0] and free_devices_number >= params.fragments_numbers[0]:
-        return False
-    if q_state[1] and free_devices_number >= params.fragments_numbers[1]:
-        return False
-    return True
-
-
-def get_number_of_free_devices_for_server_state(params: Params, server_state):
-    number = params.servers_number - \
-             (len(server_state[0]) * params.fragments_numbers[0] +
-              len(server_state[1]) * params.fragments_numbers[1])
-    if number < 0:
-        raise Exception('Number of free servers for states < 0, '
-                        'it is not correct state')
-    return number
 
 
 def define_queue_state(q1, q2, devices, lambda1, lambda2, states_and_rates, class_id):
@@ -105,7 +43,13 @@ def update_system_state(config, upd, params: Params, class_id, class_id_str):
             upd["free_devices_number"] -= params.fragments_numbers[int(class_id_str) - 1]
 
 
+def create_state(q1, q2, first_class, second_class):
+    return (q1, q2), (tuple(sorted(first_class)),
+                      tuple(sorted(second_class)))
+
+
 def get_state_config(params: Params, current_state):
+    from calculations import get_number_of_free_devices_for_server_state
     return {
         "capacity1": params.queues_capacities[0],
         "capacity2": params.queues_capacities[1],
@@ -123,4 +67,4 @@ def get_upd_variables(state_config):
         "q1": state_config["q1"],
         "q2": state_config["q2"],
         "free_devices_number": state_config["free_devices_number"]
-        }
+    }

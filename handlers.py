@@ -2,8 +2,8 @@ from collections import defaultdict
 
 from logs import log_state, log_state_config, log_event, log_lost_demand, log_leaving_demand, log_leaving_fragment
 from network_params import Params
-from utils import get_state_config, define_queue_state, define_devices_state, get_upd_variables, update_system_state, \
-    create_state
+from state_functional import get_state_config, define_queue_state, define_devices_state, get_upd_variables, \
+    update_system_state, create_state
 
 
 def get_achievable_states(params, current_state):
@@ -79,3 +79,4 @@ def leaving_handler_for_class(state_config, states_and_rates, params, class_id):
             log_leaving_fragment(leave_intensity, new_state, class_id)
 
             states_and_rates[new_state] += leave_intensity
+
