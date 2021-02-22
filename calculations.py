@@ -1,7 +1,8 @@
 from characteristics import Characteristics
 from generator import get_stationary_distribution
-from utils import *
-from states_view import *
+from logs import log_network_configuration, log_message
+from states_view import print_states, pretty_devices_state, pretty_state
+from utils import get_devices_states, get_all_state_with_queues, harmonic_sum
 
 
 class Calculations:

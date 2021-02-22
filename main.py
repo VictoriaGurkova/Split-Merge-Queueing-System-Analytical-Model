@@ -8,4 +8,4 @@ if __name__ == '__main__':
     calculations.calculate()
     calculations.characters.show_all()
 
-    print("executed")  # test flake8
+    print("executed")

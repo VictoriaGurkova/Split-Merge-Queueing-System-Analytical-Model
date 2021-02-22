@@ -4,8 +4,8 @@ from states_view import pretty_state
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler('app.log', 'w', 'utf-8')  # or whatever
-handler.setFormatter(logging.Formatter('%(message)s'))  # or whatever
+handler = logging.FileHandler('app.log', 'w', 'utf-8')
+handler.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(handler)
 
 

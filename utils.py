@@ -1,6 +1,6 @@
 import itertools
 
-from logs import *
+from logs import log_arrival_in_queue, log_arrival_on_devices
 
 
 def harmonic_sum(k: int):
