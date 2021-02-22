@@ -34,19 +34,19 @@ class Calculations:
         self.calculate_characters(distribution, states)
 
     def calculate_characters(self, distribution, states):
-        for state, state_prob in enumerate(distribution):
-            log_message(f'P[{pretty_state(states[state])}] = {state_prob}')
-            self.calculate_avg_queue(states, state, state_prob)
-            self.calculate_avg_free_devices(states, state, state_prob)
-            self.calculate_avg_free_devices_if_queues_not_empty(states, state, state_prob)
-            self.calculate_avg_demands_on_devices(states, state, state_prob)
-            self.calculate_failure_prob(states, state, state_prob)
+        for state, state_probability in enumerate(distribution):
+            log_message(f'P[{pretty_state(states[state])}] = {state_probability}')
+            self.calculate_avg_queue(states, state, state_probability)
+            self.calculate_avg_free_devices(states, state, state_probability)
+            self.calculate_avg_free_devices_if_queues_not_empty(states, state, state_probability)
+            self.calculate_avg_demands_on_devices(states, state, state_probability)
+            self.calculate_failure_probability(states, state, state_probability)
 
         self.calculate_response_time()
 
     def calculate_response_time(self):
-        effective_lambda1 = self.params.lambda1 * (1 - self.characters.failure_prob1)
-        effective_lambda2 = self.params.lambda2 * (1 - self.characters.failure_prob2)
+        effective_lambda1 = self.params.lambda1 * (1 - self.characters.failure_probability1)
+        effective_lambda2 = self.params.lambda2 * (1 - self.characters.failure_probability2)
 
         queue_waiting1 = self.characters.avg_queue1 / effective_lambda1
         queue_waiting2 = self.characters.avg_queue2 / effective_lambda2
@@ -71,51 +71,51 @@ class Calculations:
         self.characters.response_time2 = (self.characters.avg_queue2 + self.characters.avg_demands_on_devices2) / (
             effective_lambda2)
 
-    def calculate_avg_queue(self, states, state, state_prob):
-        self.characters.avg_queue1 += states[state][0][0] * state_prob
-        self.characters.avg_queue2 += states[state][0][1] * state_prob
+    def calculate_avg_queue(self, states, state, state_probability):
+        self.characters.avg_queue1 += states[state][0][0] * state_probability
+        self.characters.avg_queue2 += states[state][0][1] * state_probability
 
-    def calculate_avg_free_devices(self, states, state, state_prob):
+    def calculate_avg_free_devices(self, states, state, state_probability):
         self.characters.avg_free_devices += \
             (self.params.servers_number -
              (len(states[state][1][0]) * self.params.fragments_numbers[0] +
-              len(states[state][1][1]) * self.params.fragments_numbers[1])) * state_prob
+              len(states[state][1][1]) * self.params.fragments_numbers[1])) * state_probability
 
-    def calculate_avg_free_devices_if_queues_not_empty(self, states, state, state_prob):
+    def calculate_avg_free_devices_if_queues_not_empty(self, states, state, state_probability):
         if states[state][0][0] + states[state][0][1] != 0:
             self.characters.avg_free_devices_if_queues_not_empty += \
                 (self.params.servers_number -
                  (len(states[state][1][0]) * self.params.fragments_numbers[0] +
-                  len(states[state][1][1]) * self.params.fragments_numbers[1])) * state_prob
+                  len(states[state][1][1]) * self.params.fragments_numbers[1])) * state_probability
 
-    def calculate_avg_demands_on_devices(self, states, state, state_prob):
+    def calculate_avg_demands_on_devices(self, states, state, state_probability):
         self.characters.avg_demands_on_devices1 += \
-            (len(states[state][1][0]) * self.params.fragments_numbers[0] * state_prob) / \
+            (len(states[state][1][0]) * self.params.fragments_numbers[0] * state_probability) / \
             self.params.fragments_numbers[0]
 
         self.characters.avg_demands_on_devices2 += \
-            (len(states[state][1][1]) * self.params.fragments_numbers[1] * state_prob) / \
+            (len(states[state][1][1]) * self.params.fragments_numbers[1] * state_probability) / \
             self.params.fragments_numbers[1]
 
         self.characters.avg_demands_on_devices += \
             ((len(states[state][1][0]) * self.params.fragments_numbers[0] +
-              len(states[state][1][1]) * self.params.fragments_numbers[1]) * state_prob) / \
+              len(states[state][1][1]) * self.params.fragments_numbers[1]) * state_probability) / \
             (self.params.fragments_numbers[0] + self.params.fragments_numbers[1])
 
-    def calculate_failure_prob(self, states, state, state_prob):
+    def calculate_failure_probability(self, states, state, state_probability):
         if states[state][0][0] == self.params.queues_capacities[0]:
-            self.characters.failure_prob1 += state_prob
+            self.characters.failure_probability1 += state_probability
 
         if states[state][0][1] == self.params.queues_capacities[1]:
-            self.characters.failure_prob2 += state_prob
+            self.characters.failure_probability2 += state_probability
 
         if states[state][0][0] == self.params.queues_capacities[0] or \
                 states[state][0][1] == self.params.queues_capacities[1]:
-            self.characters.failure_prob += state_prob
+            self.characters.failure_probability += state_probability
 
     def get_norm_const(self):
-        class1_prob = self.params.lambda1 / (self.params.lambda1 + self.params.lambda2)
-        class2_prob = 1 - class1_prob
-        queue_waiting_prob1 = class1_prob * (1 - self.characters.failure_prob1)
-        queue_waiting_prob2 = class2_prob * (1 - self.characters.failure_prob2)
-        return 1 / (queue_waiting_prob1 + queue_waiting_prob2)
+        class1_probability = self.params.lambda1 / (self.params.lambda1 + self.params.lambda2)
+        class2_probability = 1 - class1_probability
+        queue_waiting_probability1 = class1_probability * (1 - self.characters.failure_probability1)
+        queue_waiting_probability2 = class2_probability * (1 - self.characters.failure_probability2)
+        return 1 / (queue_waiting_probability1 + queue_waiting_probability2)

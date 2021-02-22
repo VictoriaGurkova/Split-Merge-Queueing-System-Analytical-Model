@@ -23,9 +23,9 @@ if __name__ == '__main__':
             intensity_dep.response_time1[i, j] = calculations.characters.response_time1
             intensity_dep.response_time2[i, j] = calculations.characters.response_time2
 
-            intensity_dep.failure_prob[i, j] = calculations.characters.failure_prob
-            intensity_dep.failure_prob1[i, j] = calculations.characters.failure_prob1
-            intensity_dep.failure_prob2[i, j] = calculations.characters.failure_prob2
+            intensity_dep.failure_prob[i, j] = calculations.characters.failure_probability
+            intensity_dep.failure_prob1[i, j] = calculations.characters.failure_probability1
+            intensity_dep.failure_prob2[i, j] = calculations.characters.failure_probability2
 
             intensity_dep.avg_queue1[i, j] = calculations.characters.avg_queue1
             intensity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
@@ -50,9 +50,9 @@ if __name__ == '__main__':
             capacity_dep.response_time1[i, j] = calculations.characters.response_time1
             capacity_dep.response_time2[i, j] = calculations.characters.response_time2
 
-            capacity_dep.failure_prob[i, j] = calculations.characters.failure_prob
-            capacity_dep.failure_prob1[i, j] = calculations.characters.failure_prob1
-            capacity_dep.failure_prob2[i, j] = calculations.characters.failure_prob2
+            capacity_dep.failure_prob[i, j] = calculations.characters.failure_probability
+            capacity_dep.failure_prob1[i, j] = calculations.characters.failure_probability1
+            capacity_dep.failure_prob2[i, j] = calculations.characters.failure_probability2
 
             capacity_dep.avg_queue1[i, j] = calculations.characters.avg_queue1
             capacity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
