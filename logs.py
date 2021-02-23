@@ -5,7 +5,7 @@ from state_functional import StateConfig
 from state_pretty import pretty_state
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.FileHandler('app.log', 'w', 'utf-8')
 handler.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(handler)

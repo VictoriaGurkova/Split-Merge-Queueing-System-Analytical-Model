@@ -43,8 +43,8 @@ def _leaving_handler_for_class(params: Params, state_config: StateConfig,
 
         if unserved_fragments_number == 1:
             update_state.device_state_by_class_id_pop(class_id, index)
-            update_system_state(state_config, update_state, params, class_id)
-            update_system_state(state_config, update_state, params, class_id)
+            update_system_state(state_config, update_state, params, class_id, id=1)
+            update_system_state(state_config, update_state, params, class_id, id=2)
 
             new_state = create_state(update_state.q1, update_state.q2,
                                      update_state.devices_state_class1,

@@ -91,14 +91,14 @@ def update_devices_state(q1: int, q2: int, devices: list, rate: float,
 
 
 def update_system_state(state_config: StateConfig, update_state: UpdateState,
-                        params: Params, class_id: int) -> None:
-    if state_config.get_q_by_class_id(class_id):
+                        params: Params, class_id: int, id: int) -> None:
+    if state_config.get_q_by_class_id(id):
         while update_state.free_devices_number + \
                 params.fragments_numbers[class_id - 1] >= \
-                params.fragments_numbers[class_id - 1] and update_state.get_q_by_class_id(class_id):
-            update_state.update_devices_state_by_class_id(class_id, [params.fragments_numbers[class_id - 1]])
-            update_state.get_q_by_class_id(class_id)
-            update_state.free_devices_number -= params.fragments_numbers[class_id - 1]
+                params.fragments_numbers[id - 1] and update_state.get_q_by_class_id(id):
+            update_state.update_devices_state_by_class_id(id, [params.fragments_numbers[id - 1]])
+            update_state.update_q_by_class_id(id)
+            update_state.free_devices_number -= params.fragments_numbers[id - 1]
 
 
 def create_state(q1: int, q2: int, first_class: list, second_class: list) -> tuple:
