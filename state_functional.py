@@ -45,6 +45,12 @@ class UpdateState:
         else:
             self.devices_state_class2 += value
 
+    def device_state_by_class_id_pop(self, class_id, index):
+        if class_id == 1:
+            self.devices_state_class1.pop(index)
+        else:
+            self.devices_state_class2.pop(index)
+
 
 def define_queue_state(q1: int, q2: int, devices: list, lambda1: float, lambda2: float,
                        states_and_rates: dict, class_id: int) -> None:

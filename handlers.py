@@ -42,7 +42,7 @@ def _leaving_handler_for_class(params: Params, state_config: StateConfig,
         update_state = get_update_state(state_config)
 
         if unserved_fragments_number == 1:
-            update_state.get_devices_state_by_class_id(class_id).pop(index)
+            update_state.device_state_by_class_id_pop(class_id, index)
             update_system_state(state_config, update_state, params, class_id)
             update_system_state(state_config, update_state, params, class_id)
 
