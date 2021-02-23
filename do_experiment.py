@@ -5,7 +5,10 @@ from network_params import Params
 
 
 if __name__ == '__main__':
-    params = Params()
+    params = Params(mu=3, lambda1=.5, lambda2=1,
+                    servers_number=4,
+                    fragments_numbers=[3, 2],
+                    queues_capacities=[10, 30])
 
     print("Зависимость от интенсивностей входящего потока:")
     intensity_dep = IntensityDependency()
@@ -23,9 +26,9 @@ if __name__ == '__main__':
             intensity_dep.response_time1[i, j] = calculations.characters.response_time1
             intensity_dep.response_time2[i, j] = calculations.characters.response_time2
 
-            intensity_dep.failure_prob[i, j] = calculations.characters.failure_prob
-            intensity_dep.failure_prob1[i, j] = calculations.characters.failure_prob1
-            intensity_dep.failure_prob2[i, j] = calculations.characters.failure_prob2
+            intensity_dep.failure_prob[i, j] = calculations.characters.failure_probability
+            intensity_dep.failure_prob1[i, j] = calculations.characters.failure_probability1
+            intensity_dep.failure_prob2[i, j] = calculations.characters.failure_probability2
 
             intensity_dep.avg_queue1[i, j] = calculations.characters.avg_queue1
             intensity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
@@ -50,9 +53,9 @@ if __name__ == '__main__':
             capacity_dep.response_time1[i, j] = calculations.characters.response_time1
             capacity_dep.response_time2[i, j] = calculations.characters.response_time2
 
-            capacity_dep.failure_prob[i, j] = calculations.characters.failure_prob
-            capacity_dep.failure_prob1[i, j] = calculations.characters.failure_prob1
-            capacity_dep.failure_prob2[i, j] = calculations.characters.failure_prob2
+            capacity_dep.failure_prob[i, j] = calculations.characters.failure_probability
+            capacity_dep.failure_prob1[i, j] = calculations.characters.failure_probability1
+            capacity_dep.failure_prob2[i, j] = calculations.characters.failure_probability2
 
             capacity_dep.avg_queue1[i, j] = calculations.characters.avg_queue1
             capacity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
