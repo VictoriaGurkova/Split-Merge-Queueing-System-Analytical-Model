@@ -135,9 +135,9 @@ def get_devices_states(x: int, y: int, params: Params) -> list:
                                     params.fragments_numbers[1] * j
             if params.servers_number < total_number_of_tasks:
                 continue
-            X = sorted(get_fragments_lots(i, params.fragments_numbers[0]))
-            Y = sorted(get_fragments_lots(j, params.fragments_numbers[1]))
-            server_states.update(itertools.product(X, Y))
+            x_set = sorted(get_fragments_lots(i, params.fragments_numbers[0]))
+            y_set = sorted(get_fragments_lots(j, params.fragments_numbers[1]))
+            server_states.update(itertools.product(x_set, y_set))
     return list(server_states)
 
 

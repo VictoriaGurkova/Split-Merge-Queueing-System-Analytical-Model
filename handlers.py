@@ -2,52 +2,53 @@ from collections import defaultdict
 
 from logs import log_event, log_lost_demand, log_leaving_demand, log_leaving_fragment
 from network_params import Params
-from state_functional import define_queue_state, define_devices_state, get_upd_variables, \
-    update_system_state, create_state
+from state_functional import define_queue_state, define_devices_state, get_update_state, \
+    update_system_state, create_state, StateConfig
 
 
-def arrival_handler(params: Params, state_config: dict, states_and_rates: defaultdict) -> None:
+def arrival_handler(params: Params, state_config: StateConfig, states_and_rates: defaultdict) -> None:
     log_event('ARRIVAL')
     _arrival_handler_for_class(params, state_config, states_and_rates, class_id=1)
     _arrival_handler_for_class(params, state_config, states_and_rates, class_id=2)
 
 
-def leaving_handler(params: Params, state_config: dict, states_and_rates: defaultdict) -> None:
+def leaving_handler(params: Params, state_config: StateConfig, states_and_rates: defaultdict) -> None:
     log_event('LEAVING')
-    _leaving_handler_for_class(state_config, states_and_rates, params, class_id=1)
-    _leaving_handler_for_class(state_config, states_and_rates, params, class_id=2)
+    _leaving_handler_for_class(params, state_config, states_and_rates, class_id=1)
+    _leaving_handler_for_class(params, state_config, states_and_rates, class_id=2)
 
 
-def _arrival_handler_for_class(params: Params, config: dict, states_and_rates: defaultdict, class_id: int) -> None:
-    if config[f"q{class_id}"] != config[f"capacity{class_id}"]:
-        if config["free_devices_number"] < params.fragments_numbers[class_id - 1]:
-            define_queue_state(config["q1"], config["q2"],
-                               [config["devices"][0], config["devices"][1]],
+def _arrival_handler_for_class(params: Params, state_config: StateConfig,
+                               states_and_rates: defaultdict, class_id: int) -> None:
+    if state_config.get_q_by_class_id(class_id) != state_config.get_capacity_by_class_id(class_id):
+        if state_config.free_devices_number < params.fragments_numbers[class_id - 1]:
+            define_queue_state(state_config.q1, state_config.q2,
+                               [state_config.devices[0], state_config.devices[1]],
                                params.lambda1, params.lambda2,
                                states_and_rates, class_id)
         else:
-            define_devices_state(config["q1"], config["q2"],
-                                 [config["devices"][0], config["devices"][1]],
+            define_devices_state(state_config.q1, state_config.q2,
+                                 [state_config.devices[0], state_config.devices[1]],
                                  params.lambda1, params.lambda2,
                                  states_and_rates, params, class_id)
     else:
         log_lost_demand()
 
 
-def _leaving_handler_for_class(state_config: dict, states_and_rates: defaultdict,
-                               params: Params, class_id: int) -> None:
+def _leaving_handler_for_class(params: Params, state_config: StateConfig,
+                               states_and_rates: defaultdict, class_id: int) -> None:
     for index, unserved_fragments_number in \
-            enumerate(state_config["devices"][class_id - 1]):
-        upd = get_upd_variables(state_config)
+            enumerate(state_config.devices[class_id - 1]):
+        update_state = get_update_state(state_config)
 
         if unserved_fragments_number == 1:
-            upd[f"devices_state_class{class_id}"].pop(index)
-            update_system_state(state_config, upd, params, class_id, class_id_str="1")
-            update_system_state(state_config, upd, params, class_id, class_id_str="2")
+            update_state.get_devices_state_by_class_id(class_id).pop(index)
+            update_system_state(state_config, update_state, params, class_id)
+            update_system_state(state_config, update_state, params, class_id)
 
-            new_state = create_state(upd["q1"], upd["q2"],
-                                     upd["devices_state_class1"],
-                                     upd["devices_state_class2"])
+            new_state = create_state(update_state.q1, update_state.q2,
+                                     update_state.devices_state_class1,
+                                     update_state.devices_state_class2)
 
             log_leaving_demand(params.mu, new_state, class_id)
 
@@ -56,13 +57,13 @@ def _leaving_handler_for_class(state_config: dict, states_and_rates: defaultdict
         else:
             leave_intensity = params.mu * unserved_fragments_number
             if class_id == 1:
-                upd["devices_state_class1"][index] -= 1
+                update_state.devices_state_class1[index] -= 1
             else:
-                upd["devices_state_class2"][index] -= 1
+                update_state.devices_state_class2[index] -= 1
 
-            new_state = create_state(state_config["q1"], state_config["q2"],
-                                     upd["devices_state_class1"],
-                                     upd["devices_state_class2"])
+            new_state = create_state(state_config.q1, state_config.q2,
+                                     update_state.devices_state_class1,
+                                     update_state.devices_state_class2)
 
             log_leaving_fragment(leave_intensity, new_state, class_id)
 

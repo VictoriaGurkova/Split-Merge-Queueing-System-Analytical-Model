@@ -1,6 +1,7 @@
 import logging
 
 from network_params import Params
+from state_functional import StateConfig
 from state_pretty import pretty_state
 
 logger = logging.getLogger()
@@ -38,11 +39,11 @@ def log_state(current_state: list) -> None:
     logger.debug('Consider state ' + pretty_state(current_state))
 
 
-def log_state_config(config: dict) -> None:
-    logger.debug(f'Queue 1 size = {config["q1"]}')
-    logger.debug(f'Queue 2 size = {config["q2"]}')
-    logger.debug(f'Devices state = {config["devices"]}')
-    logger.debug(f'Free devices number = {config["free_devices_number"]}')
+def log_state_config(state_config: StateConfig) -> None:
+    logger.debug(f'Queue 1 size = {state_config.q1}')
+    logger.debug(f'Queue 2 size = {state_config.q2}')
+    logger.debug(f'Devices state = {state_config.devices}')
+    logger.debug(f'Free devices number = {state_config.free_devices_number}')
 
 
 def log_arrival_in_queue(lambda_: float, state: tuple, class_id: int) -> None:
