@@ -10,7 +10,7 @@ if __name__ == '__main__':
                     fragments_numbers=[3, 2],
                     queues_capacities=[10, 30])
 
-    print("Зависимость от интенсивностей входящего потока:")
+    print("Dependence on the arrival flow rates:")
     rate_dep = RateDependency()
 
     for i, lam1 in enumerate(rate_dep.lambdas):
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     rate_dep.draw_rt()
     rate_dep.draw_fp()
 
-    print("Зависимость от длины очередей:")
+    print("Dependence on the queues capacity:")
     capacity_dep = CapacityDependency()
 
     for i, capacity1 in enumerate(capacity_dep.capacities):
