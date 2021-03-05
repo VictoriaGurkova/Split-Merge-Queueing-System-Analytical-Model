@@ -1,6 +1,6 @@
 from calculations import Calculations
 from experiment.capacity_dependency import CapacityDependency
-from experiment.intensity_dependency import IntensityDependency
+from experiment.rate_dependency import RateDependency
 from network_params import Params
 
 
@@ -11,31 +11,31 @@ if __name__ == '__main__':
                     queues_capacities=[10, 30])
 
     print("Зависимость от интенсивностей входящего потока:")
-    intensity_dep = IntensityDependency()
+    rate_dep = RateDependency()
 
-    for i, lam1 in enumerate(intensity_dep.lambdas):
-        for j, lam2 in enumerate(intensity_dep.lambdas):
+    for i, lam1 in enumerate(rate_dep.lambdas):
+        for j, lam2 in enumerate(rate_dep.lambdas):
             params.lambda1 = lam1
             params.lambda2 = lam2
             calculations = Calculations(params)
             calculations.calculate()
 
-            print(f"measures for {calculations} \n{calculations.characters}")
+            print(f"measures for {calculations} \n{calculations.performance_measures}")
 
-            intensity_dep.response_time[i, j] = calculations.characters.response_time
-            intensity_dep.response_time1[i, j] = calculations.characters.response_time1
-            intensity_dep.response_time2[i, j] = calculations.characters.response_time2
+            rate_dep.response_time[i, j] = calculations.performance_measures.response_time
+            rate_dep.response_time1[i, j] = calculations.performance_measures.response_time1
+            rate_dep.response_time2[i, j] = calculations.performance_measures.response_time2
 
-            intensity_dep.failure_prob[i, j] = calculations.characters.failure_probability
-            intensity_dep.failure_prob1[i, j] = calculations.characters.failure_probability1
-            intensity_dep.failure_prob2[i, j] = calculations.characters.failure_probability2
+            rate_dep.failure_prob[i, j] = calculations.performance_measures.failure_probability
+            rate_dep.failure_prob1[i, j] = calculations.performance_measures.failure_probability1
+            rate_dep.failure_prob2[i, j] = calculations.performance_measures.failure_probability2
 
-            intensity_dep.avg_queue1[i, j] = calculations.characters.avg_queue1
-            intensity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
+            rate_dep.avg_queue1[i, j] = calculations.performance_measures.avg_queue1
+            rate_dep.avg_queue2[i, j] = calculations.performance_measures.avg_queue2
 
-    intensity_dep.save_results()
-    intensity_dep.draw_rt()
-    intensity_dep.draw_fp()
+    rate_dep.save_results()
+    rate_dep.draw_rt()
+    rate_dep.draw_fp()
 
     print("Зависимость от длины очередей:")
     capacity_dep = CapacityDependency()
@@ -47,18 +47,18 @@ if __name__ == '__main__':
 
             calculations.calculate()
 
-            print(f"measures for {calculations} \n{calculations.characters}")
+            print(f"measures for {calculations} \n{calculations.performance_measures}")
 
-            capacity_dep.response_time[i, j] = calculations.characters.response_time
-            capacity_dep.response_time1[i, j] = calculations.characters.response_time1
-            capacity_dep.response_time2[i, j] = calculations.characters.response_time2
+            capacity_dep.response_time[i, j] = calculations.performance_measures.response_time
+            capacity_dep.response_time1[i, j] = calculations.performance_measures.response_time1
+            capacity_dep.response_time2[i, j] = calculations.performance_measures.response_time2
 
-            capacity_dep.failure_prob[i, j] = calculations.characters.failure_probability
-            capacity_dep.failure_prob1[i, j] = calculations.characters.failure_probability1
-            capacity_dep.failure_prob2[i, j] = calculations.characters.failure_probability2
+            capacity_dep.failure_prob[i, j] = calculations.performance_measures.failure_probability
+            capacity_dep.failure_prob1[i, j] = calculations.performance_measures.failure_probability1
+            capacity_dep.failure_prob2[i, j] = calculations.performance_measures.failure_probability2
 
-            capacity_dep.avg_queue1[i, j] = calculations.characters.avg_queue1
-            capacity_dep.avg_queue2[i, j] = calculations.characters.avg_queue2
+            capacity_dep.avg_queue1[i, j] = calculations.performance_measures.avg_queue1
+            capacity_dep.avg_queue2[i, j] = calculations.performance_measures.avg_queue2
 
     capacity_dep.save_results()
     print("executed")
