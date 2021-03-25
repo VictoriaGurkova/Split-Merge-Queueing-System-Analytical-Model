@@ -47,8 +47,9 @@ class Calculations:
         print_states(servers_states, pretty_servers_state)
 
         log_message('\nSystem states along with queues:')
+        servers_states = get_servers_states(self.x, self.y, self.params)
 
-        states = get_all_state_with_queues(devices_states, self.params.queues_capacities, self.params)
+        states = get_all_state_with_queues(servers_states, self.params.queues_capacities, self.params)
 
         policed_states = get_policed_states(states, self.params)
 
