@@ -9,8 +9,8 @@ class StateConfig:
     capacity2: int
     q1: int
     q2: int
-    devices: list
-    free_devices_number: int
+    servers: list
+    free_servers_number: int
 
     def get_q_by_class_id(self, class_id: int) -> int:
         return self.q1 if class_id == 1 else self.q2
@@ -21,11 +21,11 @@ class StateConfig:
 
 @dataclass
 class UpdateState:
-    devices_state_class1: list
-    devices_state_class2: list
+    servers_state_class1: list
+    servers_state_class2: list
     q1: int
     q2: int
-    free_devices_number: int
+    free_servers_number: int
 
     def get_q_by_class_id(self, class_id: int) -> int:
         return self.q1 if class_id == 1 else self.q2
@@ -36,69 +36,69 @@ class UpdateState:
         else:
             self.q2 -= 1
 
-    def get_devices_state_by_class_id(self, class_id: int) -> list:
-        return self.devices_state_class1 if class_id == 1 else self.devices_state_class2
+    def get_servers_state_by_class_id(self, class_id: int) -> list:
+        return self.servers_state_class1 if class_id == 1 else self.servers_state_class2
 
-    def update_devices_state_by_class_id(self, class_id: int, value: list) -> None:
+    def update_servers_state_by_class_id(self, class_id: int, value: list) -> None:
         if class_id == 1:
-            self.devices_state_class1 += value
+            self.servers_state_class1 += value
         else:
-            self.devices_state_class2 += value
+            self.servers_state_class2 += value
 
-    def device_state_by_class_id_pop(self, class_id, index):
+    def server_state_by_class_id_pop(self, class_id, index):
         if class_id == 1:
-            self.devices_state_class1.pop(index)
+            self.servers_state_class1.pop(index)
         else:
-            self.devices_state_class2.pop(index)
+            self.servers_state_class2.pop(index)
 
 
-def define_queue_state(q1: int, q2: int, devices: list, lambda1: float, lambda2: float,
+def define_queue_state(q1: int, q2: int, servers: list, lambda1: float, lambda2: float,
                        states_and_rates: dict, class_id: int) -> None:
     if class_id == 1:
-        update_queue_state(q1 + 1, q2, devices, lambda1, states_and_rates, class_id)
+        update_queue_state(q1 + 1, q2, servers, lambda1, states_and_rates, class_id)
     else:
-        update_queue_state(q1, q2 + 1, devices, lambda2, states_and_rates, class_id)
+        update_queue_state(q1, q2 + 1, servers, lambda2, states_and_rates, class_id)
 
 
-def update_queue_state(q1: int, q2: int, devices: list, lambda_: float, states_and_rates: dict, class_id: int) -> None:
+def update_queue_state(q1: int, q2: int, servers: list, lambda_: float, states_and_rates: dict, class_id: int) -> None:
     from logs import log_arrival_in_queue
 
-    state = create_state(q1, q2, devices[0], devices[1])
+    state = create_state(q1, q2, servers[0], servers[1])
     log_arrival_in_queue(lambda_, state, class_id)
     states_and_rates[state] += lambda_
 
 
-def define_devices_state(q1: int, q2: int, devices: list, lambda1: float, lambda2: float,
+def define_servers_state(q1: int, q2: int, servers: list, lambda1: float, lambda2: float,
                          states_and_rates: dict, params: Params, class_id: int) -> None:
     if class_id == 1:
-        update_devices_state(q1, q2, devices, lambda1, states_and_rates, params, class_id)
+        update_servers_state(q1, q2, servers, lambda1, states_and_rates, params, class_id)
     else:
-        update_devices_state(q1, q2, devices, lambda2, states_and_rates, params, class_id)
+        update_servers_state(q1, q2, servers, lambda2, states_and_rates, params, class_id)
 
 
-def update_devices_state(q1: int, q2: int, devices: list, rate: float,
+def update_servers_state(q1: int, q2: int, servers: list, rate: float,
                          states_and_rates: dict, params: Params, class_id: int) -> None:
-    from logs import log_arrival_on_devices
+    from logs import log_arrival_on_servers
 
-    update_state = devices[class_id - 1]
+    update_state = servers[class_id - 1]
     update_state += (params.fragments_numbers[class_id - 1],)
 
-    state = create_state(q1, q2, update_state, devices[1]) if class_id == 1 \
-        else create_state(q1, q2, devices[0], update_state)
+    state = create_state(q1, q2, update_state, servers[1]) if class_id == 1 \
+        else create_state(q1, q2, servers[0], update_state)
 
-    log_arrival_on_devices(rate, state, class_id)
+    log_arrival_on_servers(rate, state, class_id)
     states_and_rates[state] += rate
 
 
 def update_system_state(state_config: StateConfig, update_state: UpdateState,
                         params: Params, class_id: int, id: int) -> None:
     if state_config.get_q_by_class_id(id):
-        while update_state.free_devices_number + \
+        while update_state.free_servers_number + \
                 params.fragments_numbers[class_id - 1] >= \
                 params.fragments_numbers[id - 1] and update_state.get_q_by_class_id(id):
-            update_state.update_devices_state_by_class_id(id, [params.fragments_numbers[id - 1]])
+            update_state.update_servers_state_by_class_id(id, [params.fragments_numbers[id - 1]])
             update_state.update_q_by_class_id(id)
-            update_state.free_devices_number -= params.fragments_numbers[id - 1]
+            update_state.free_servers_number -= params.fragments_numbers[id - 1]
 
 
 def create_state(q1: int, q2: int, first_class: list, second_class: list) -> tuple:
@@ -107,24 +107,24 @@ def create_state(q1: int, q2: int, first_class: list, second_class: list) -> tup
 
 
 def get_state_config(params: Params, current_state: list) -> StateConfig:
-    from calculations import get_number_of_free_devices_for_server_state
+    from calculations import get_free_servers_number_for_server_state
     state_config = StateConfig(
         capacity1=params.queues_capacities[0],
         capacity2=params.queues_capacities[1],
         q1=current_state[0][0],
         q2=current_state[0][1],
-        devices=current_state[1],
-        free_devices_number=get_number_of_free_devices_for_server_state(params, current_state[1])
+        servers=current_state[1],
+        free_servers_number=get_free_servers_number_for_server_state(params, current_state[1])
     )
     return state_config
 
 
 def get_update_state(state_config: StateConfig) -> UpdateState:
     update_state = UpdateState(
-        devices_state_class1=list(state_config.devices[0]),
-        devices_state_class2=list(state_config.devices[1]),
+        servers_state_class1=list(state_config.servers[0]),
+        servers_state_class2=list(state_config.servers[1]),
         q1=state_config.q1,
         q2=state_config.q2,
-        free_devices_number=state_config.free_devices_number
+        free_servers_number=state_config.free_servers_number
     )
     return update_state

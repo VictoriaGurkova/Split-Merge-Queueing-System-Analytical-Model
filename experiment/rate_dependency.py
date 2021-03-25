@@ -3,9 +3,9 @@ import numpy as np
 from experiment.experiment import Experiment
 
 
-class IntensityDependency(Experiment):
+class RateDependency(Experiment):
 
-    __NAME = "intensity"
+    __NAME = "rate"
 
     def __init__(self, k=20, init_value=.5, final_value=2.5):
         self.init_value = init_value
@@ -13,7 +13,7 @@ class IntensityDependency(Experiment):
 
         self.lambdas = list(np.linspace(init_value, final_value, k))
 
-        super().__init__(IntensityDependency.__NAME, k)
+        super().__init__(RateDependency.__NAME, k)
 
     def save_results(self):
         super().save(self.lambdas)

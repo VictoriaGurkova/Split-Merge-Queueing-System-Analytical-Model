@@ -4,11 +4,11 @@ from calculations import Calculations
 from network_params import Params
 
 
-def get_characters(params):
+def get_performance_measures(params):
     calculations = Calculations(params)
     calculations.calculate()
-    print(calculations.characters)
-    return calculations.characters
+    print(calculations.performance_measures)
+    return calculations.performance_measures
 
 
 class TestStates(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestStates(unittest.TestCase):
         self.compare_results(test_data)
 
     def compare_results(self, data):
-        result = get_characters(data["params"])
+        result = get_performance_measures(data["params"])
         self.assertAlmostEqual(result.response_time, data["expected_rt"], places=3)
         self.assertAlmostEqual(result.failure_probability, data["expected_fp"], places=3)
 
