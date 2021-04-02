@@ -5,6 +5,7 @@ from logs import log_network_configuration, log_message
 from network_params import Params
 from performance_measures import PerformanceMeasures
 from pretty_state import print_states, pretty_servers_state, pretty_state
+from work_with_policy_states import get_policed_states
 
 
 class Calculations:
@@ -18,26 +19,21 @@ class Calculations:
 
     def calculate(self) -> None:
         log_network_configuration(self.params)
-
         log_message('Fragment states on servers (not including queues):')
+
         servers_states = get_servers_states(self.x, self.y, self.params)
         print_states(servers_states, pretty_servers_state)
-
         log_message('\nSystem states along with queues:')
         servers_states = get_servers_states(self.x, self.y, self.params)
-
         states = get_all_state_with_queues(servers_states, self.params.queues_capacities, self.params)
-
-        policed_states = get_policed_states(states, self.params)
-
         print_states(states, pretty_state)
 
         distribution = get_stationary_distribution(states, self.params)
-
         log_message(f'Stationary distribution P_i:\n {distribution}')
         log_message(f'Check sum P_i: {sum(distribution)}')
-
         self.calculate_performance_measures(distribution, states)
+
+        policed_states = get_policed_states(states, self.params)
 
     def calculate_performance_measures(self, distribution: list, states: list) -> None:
         for state, state_probability in enumerate(distribution):
@@ -160,32 +156,6 @@ def get_all_state_with_queues(server_states: list, queues_capacities: list, para
 def get_fragments_lots(demands_number: int, fragments_in_class: int) -> list:
     return list(itertools.combinations_with_replacement(
         range(1, fragments_in_class + 1), demands_number))
-
-
-def get_policed_states(states: list, params: Params):
-    # for a < b and a > b
-    # класс требований с максимальным числом фрагментов
-    index = params.fragments_numbers.index(max(params.fragments_numbers))
-
-    last_fragment = 1
-    policed_states = []
-    for state in states:
-        all_queues_not_empty = state[0][0] and state[0][1]
-        last_fragment_of_any_demand = last_fragment in state[1][0] or last_fragment in state[1][1]
-        if all_queues_not_empty and last_fragment_of_any_demand:
-            free_servers_number = params.servers_number - (
-                    len(state[1][0]) * params.fragments_numbers[0] +
-                    len(state[1][1]) * params.fragments_numbers[1])
-            # если уходит больший класс, то есть управление
-            if last_fragment in state[1][index]:
-                policed_states.append(state)
-            # если уходит меньший класс и есть свободные приборы, то есть управление
-            else:
-                if free_servers_number != 0:
-                    policed_states.append(state)
-
-    [print(state) for state in policed_states]
-    return policed_states
 
 
 def check_possible_state(q_state: tuple, state: list, params: Params) -> bool:

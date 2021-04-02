@@ -41,6 +41,10 @@ def _leaving_handler_for_class(params: Params, state_config: StateConfig,
             enumerate(state_config.servers[class_id - 1]):
         update_state = get_update_state(state_config)
         if unserved_fragments_number == 1:
+            # если у нас состояние с управлением (if update_state in policed_states)
+            # то мы отбращаемся к бинарному вектору стратегий (selected_state = ?)
+            # определяем оттуда какое состояние нам выбрать
+            # и в словарь плюсуем mu только к этому состоянию states_and_rates[selected_state] += params.mu
             update_state.server_state_by_class_id_pop(class_id, index)
             update_system_state(state_config, update_state, params, class_id, id=1)
             update_system_state(state_config, update_state, params, class_id, id=2)
