@@ -5,7 +5,7 @@ from logs import log_network_configuration, log_message
 from network_params import Params
 from performance_measures import PerformanceMeasures
 from pretty_state import print_states, pretty_servers_state, pretty_state
-from work_with_policy_states import get_policed_states
+from states_policy import StatesPolicy
 
 
 class Calculations:
@@ -17,23 +17,14 @@ class Calculations:
         self.x = params.servers_number // params.fragments_numbers[0]
         self.y = params.servers_number // params.fragments_numbers[1]
 
-    def calculate(self) -> None:
+    def calculate(self, states_policy: StatesPolicy=None) -> None:
         log_network_configuration(self.params)
-        log_message('Fragment states on servers (not including queues):')
+        states = self.get_all_states()
 
-        servers_states = get_servers_states(self.x, self.y, self.params)
-        print_states(servers_states, pretty_servers_state)
-        log_message('\nSystem states along with queues:')
-        servers_states = get_servers_states(self.x, self.y, self.params)
-        states = get_all_state_with_queues(servers_states, self.params.queues_capacities, self.params)
-        print_states(states, pretty_state)
-
-        distribution = get_stationary_distribution(states, self.params)
+        distribution = get_stationary_distribution(states, states_policy, self.params)
         log_message(f'Stationary distribution P_i:\n {distribution}')
         log_message(f'Check sum P_i: {sum(distribution)}')
         self.calculate_performance_measures(distribution, states)
-
-        policed_states = get_policed_states(states, self.params)
 
     def calculate_performance_measures(self, distribution: list, states: list) -> None:
         for state, state_probability in enumerate(distribution):
@@ -125,6 +116,20 @@ class Calculations:
         queue_waiting_probability1 = class1_probability * (1 - self.performance_measures.failure_probability1)
         queue_waiting_probability2 = class2_probability * (1 - self.performance_measures.failure_probability2)
         return 1 / (queue_waiting_probability1 + queue_waiting_probability2)
+
+    def get_all_states(self, logs=False):
+        servers_states = get_servers_states(self.x, self.y, self.params)
+        if logs:
+            log_message('Fragment states on servers (not including queues):')
+            print_states(servers_states, pretty_servers_state)
+
+        servers_states = get_servers_states(self.x, self.y, self.params)
+        states = get_all_state_with_queues(servers_states, self.params.queues_capacities, self.params)
+        if logs:
+            log_message('\nSystem states along with queues:')
+            print_states(states, pretty_state)
+
+        return states
 
 
 def get_servers_states(x: int, y: int, params: Params) -> list:

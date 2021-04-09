@@ -51,6 +51,10 @@ class UpdateState:
         else:
             self.servers_state_class2.pop(index)
 
+    def get_tuple(self) -> tuple:
+        return (self.q1, self.q2), (tuple(sorted(self.servers_state_class1)),
+                                    tuple(sorted(self.servers_state_class2)))
+
 
 def define_queue_state(q1: int, q2: int, servers: list, lambda1: float, lambda2: float,
                        states_and_rates: dict, class_id: int) -> None:
@@ -119,7 +123,7 @@ def get_state_config(params: Params, current_state: list) -> StateConfig:
     return state_config
 
 
-def get_update_state(state_config: StateConfig) -> UpdateState:
+def get_updated_state(state_config: StateConfig) -> UpdateState:
     update_state = UpdateState(
         servers_state_class1=list(state_config.servers[0]),
         servers_state_class2=list(state_config.servers[1]),
