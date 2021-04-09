@@ -25,6 +25,7 @@ if __name__ == '__main__':
 
     for strategy in strategies:
         states_policy.strategy = strategy
+        print(strategy)
         calculations.calculate(states_policy)
         performance_measures = calculations.performance_measures
         print(performance_measures, "\n")

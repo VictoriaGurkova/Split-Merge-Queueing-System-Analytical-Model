@@ -30,8 +30,6 @@ class PerformanceMeasures:
                f"failure_prob2 = {self.failure_probability2} \n" \
                f"avg_queue1 = {self.avg_queue1} \n" \
                f"avg_queue2 = {self.avg_queue2} \n" \
-               f"avg_queue1: {self.avg_queue1}\n" \
-               f"avg_queue2: {self.avg_queue2}\n" \
                f"avg_demands_on_servers: {self.avg_demands_on_servers}\n" \
                f"avg_demands_on_servers1: {self.avg_demands_on_servers1}\n" \
                f"avg_demands_on_servers2: {self.avg_demands_on_servers2}\n" \

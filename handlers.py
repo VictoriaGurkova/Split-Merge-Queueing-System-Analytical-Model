@@ -53,21 +53,23 @@ def _leaving_handler_for_class(params: Params,
         updated_state = get_updated_state(state_config)
         if unserved_fragments_number == 1:
             # если у нас состояние с управлением (if update_state in policed_states)
+            # то мы отбращаемся к бинарному вектору стратегий (selected_state = ?)
+            # определяем оттуда какое состояние нам выбрать
+            # и в словарь плюсуем mu только к этому состоянию states_and_rates[selected_state] += params.mu
             state = updated_state.get_tuple()
             if state in states_policy.states_with_policy:
                 new_state =\
                     states_policy.adjacent_states[state][states_policy.strategy[states_policy.states_with_policy.index(state)]]
-            # то мы отбращаемся к бинарному вектору стратегий (selected_state = ?)
-            # определяем оттуда какое состояние нам выбрать
-            # и в словарь плюсуем mu только к этому состоянию states_and_rates[selected_state] += params.mu
 
-            # updated_state.server_state_by_class_id_pop(class_id, index)
-            # update_system_state(state_config, updated_state, params, class_id, id=1)
-            # update_system_state(state_config, updated_state, params, class_id, id=2)
-            # new_state = create_state(updated_state.q1, updated_state.q2,
-            #                          updated_state.servers_state_class1,
-            #                          updated_state.servers_state_class2)
-
+                log_leaving_demand(params.mu, new_state, class_id)
+                states_and_rates[new_state] += params.mu
+            else:
+                updated_state.server_state_by_class_id_pop(class_id, index)
+                update_system_state(state_config, updated_state, params, class_id, id=1)
+                update_system_state(state_config, updated_state, params, class_id, id=2)
+                new_state = create_state(updated_state.q1, updated_state.q2,
+                                         updated_state.servers_state_class1,
+                                         updated_state.servers_state_class2)
                 log_leaving_demand(params.mu, new_state, class_id)
                 states_and_rates[new_state] += params.mu
         else:
