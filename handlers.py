@@ -56,7 +56,12 @@ def _leaving_handler_for_class(params: Params,
             # то мы отбращаемся к бинарному вектору стратегий (selected_state = ?)
             # определяем оттуда какое состояние нам выбрать
             # и в словарь плюсуем mu только к этому состоянию states_and_rates[selected_state] += params.mu
+            s = ((1, 1), ((1,), (1,)))
             state = updated_state.get_tuple()
+            print(str(state))
+            print(str(s))
+            if str(state) == str(s):
+                print()
             if state in states_policy.states_with_policy:
                 new_state =\
                     states_policy.adjacent_states[state][states_policy.strategy[states_policy.states_with_policy.index(state)]]

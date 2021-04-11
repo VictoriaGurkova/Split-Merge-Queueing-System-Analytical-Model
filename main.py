@@ -23,9 +23,10 @@ if __name__ == '__main__':
 
     states_policy = StatesPolicy(tuple(), states_with_policy, params)
 
-    for strategy in strategies:
+    for strategy in strategies[-1:]:
         states_policy.strategy = strategy
         print(strategy)
+        calculations = Calculations(params)
         calculations.calculate(states_policy)
         performance_measures = calculations.performance_measures
         print(performance_measures, "\n")
