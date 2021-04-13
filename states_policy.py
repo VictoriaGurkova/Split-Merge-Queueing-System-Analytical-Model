@@ -1,6 +1,7 @@
 import itertools
 
 from network_params import Params
+from state_functional import get_free_servers_after_leaving, have_a_choice
 
 
 class StatesPolicy:
@@ -11,11 +12,13 @@ class StatesPolicy:
 
         self.adjacent_states: dict = {state: self.define_adjacent_states(state) for state in states_with_policy}
 
+    def print_adjacent_states(self):
         for state in self.adjacent_states.keys():
-            print("\n", " " * 14, state)
+            print("\n", " " * 20, state, "\n")
+            print(" " * 10, "0", " " * 40, "1")
             for i in self.adjacent_states[state]:
-                print(i, end=" " * 10)
-            print()
+                print(i, end=" " * 22)
+            print("\n", "-" * 65)
 
     def define_adjacent_states(self, state: tuple) -> list:
         last_fragment = 1
@@ -23,7 +26,7 @@ class StatesPolicy:
 
         index = 0
         for server_state in state[1]:
-            if last_fragment in server_state and self.have_a_choice(state, index):
+            if last_fragment in server_state and have_a_choice(state, index, self.params):
                 # generate state when first class is taken
                 adjacent_states.append(self.get_state_after_leaving(state[0], state[1], index, 0))
                 # generate state when second class is taken
@@ -34,22 +37,12 @@ class StatesPolicy:
 
         return adjacent_states
 
-    def have_a_choice(self, state: tuple, class_id: int) -> bool:
-        return self.get_free_servers_after_leaving(state[1], class_id) >= max(self.params.fragments_numbers)
-
-    def get_free_servers_after_leaving(self, server_state, class_id):
-        return self.params.servers_number - (
-                len(server_state[0]) * self.params.fragments_numbers[0] +
-                len(server_state[1]) * self.params.fragments_numbers[1]) + \
-               self.params.fragments_numbers[class_id]
-
     def get_state_after_leaving(self, queues_state, server_state, class_id_leave, class_id_take) -> tuple:
         if class_id_leave == 0:
             if class_id_take == 0:
-
                 # TODO: export in def
                 possible_demands_number_for_taking = \
-                    self.get_free_servers_after_leaving(server_state, 0) // self.params.fragments_numbers[0]
+                    get_free_servers_after_leaving(server_state, 0, self.params) // self.params.fragments_numbers[0]
                 available_demands_number_for_taking = \
                     queues_state[0] if queues_state[0] <= possible_demands_number_for_taking \
                         else possible_demands_number_for_taking
@@ -60,7 +53,7 @@ class StatesPolicy:
             else:
 
                 possible_demands_number_for_taking = \
-                    self.get_free_servers_after_leaving(server_state, 0) // self.params.fragments_numbers[1]
+                    get_free_servers_after_leaving(server_state, 0, self.params) // self.params.fragments_numbers[1]
                 available_demands_number_for_taking = \
                     queues_state[1] if queues_state[1] <= possible_demands_number_for_taking \
                         else possible_demands_number_for_taking
@@ -72,7 +65,7 @@ class StatesPolicy:
             if class_id_take == 0:
 
                 possible_demands_number_for_taking = \
-                    self.get_free_servers_after_leaving(server_state, 1) // self.params.fragments_numbers[0]
+                    get_free_servers_after_leaving(server_state, 1, self.params) // self.params.fragments_numbers[0]
                 available_demands_number_for_taking = \
                     queues_state[0] if queues_state[0] <= possible_demands_number_for_taking \
                         else possible_demands_number_for_taking
@@ -83,7 +76,7 @@ class StatesPolicy:
             else:
 
                 possible_demands_number_for_taking = \
-                    self.get_free_servers_after_leaving(server_state, 1) // self.params.fragments_numbers[1]
+                    get_free_servers_after_leaving(server_state, 1, self.params) // self.params.fragments_numbers[1]
                 available_demands_number_for_taking = \
                     queues_state[1] if queues_state[1] <= possible_demands_number_for_taking \
                         else possible_demands_number_for_taking

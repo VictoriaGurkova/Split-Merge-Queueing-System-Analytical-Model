@@ -18,12 +18,12 @@ if __name__ == '__main__':
     pprint(states_with_policy)
 
     strategies = get_strategy(states_with_policy)
-    print("\nVarious combinations of policies:")
-    pprint(strategies)
-
     states_policy = StatesPolicy(tuple(), states_with_policy, params)
+    states_policy.print_adjacent_states()
 
+    print()
     for strategy in strategies[-1:]:
+    # for strategy in strategies:
         states_policy.strategy = strategy
         print(strategy)
         calculations = Calculations(params)

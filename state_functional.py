@@ -132,3 +132,14 @@ def get_updated_state(state_config: StateConfig) -> UpdateState:
         free_servers_number=state_config.free_servers_number
     )
     return update_state
+
+
+def have_a_choice(state: tuple, class_id: int, params: Params) -> bool:
+    return get_free_servers_after_leaving(state[1], class_id, params) >= max(params.fragments_numbers)
+
+
+def get_free_servers_after_leaving(server_state: tuple, class_id: int, params: Params) -> int:
+    return params.servers_number - (
+            len(server_state[0]) * params.fragments_numbers[0] +
+            len(server_state[1]) * params.fragments_numbers[1]) + \
+            params.fragments_numbers[class_id]
