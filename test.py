@@ -2,15 +2,21 @@ import unittest
 
 from calculations import Calculations
 from network_params import Params
+from states_policy import StatesPolicy, get_policed_states
 
 
 def get_performance_measures(params):
     calculations = Calculations(params)
-    calculations.calculate()
+    strategy = (0, 0, 0, 0)
+    all_states = calculations.get_all_states()
+    states_with_policy = get_policed_states(all_states, params)
+    states_policy = StatesPolicy(strategy, states_with_policy, params)
+    calculations.calculate(states_policy)
     print(calculations.performance_measures)
     return calculations.performance_measures
 
 
+# TODO: fix
 class TestStates(unittest.TestCase):
 
     def test_case1(self):
