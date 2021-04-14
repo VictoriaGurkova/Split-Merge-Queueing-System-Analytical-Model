@@ -51,7 +51,7 @@ class UpdateState:
         else:
             self.servers_state_class2.pop(index)
 
-    def get_tuple(self) -> tuple:
+    def get_tuple_view(self) -> tuple:
         return (self.q1, self.q2), (tuple(sorted(self.servers_state_class1)),
                                     tuple(sorted(self.servers_state_class2)))
 

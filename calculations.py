@@ -17,7 +17,7 @@ class Calculations:
         self.x = params.servers_number // params.fragments_numbers[0]
         self.y = params.servers_number // params.fragments_numbers[1]
 
-    def calculate(self, states_policy: StatesPolicy=None) -> None:
+    def calculate(self, states_policy: StatesPolicy) -> None:
         log_network_configuration(self.params)
         states = self.get_all_states()
 
@@ -44,8 +44,8 @@ class Calculations:
         queue_waiting1 = self.performance_measures.avg_queue1 / effective_lambda1
         queue_waiting2 = self.performance_measures.avg_queue2 / effective_lambda2
 
-        # self.calculate_response_time_solution1(queue_waiting1, queue_waiting2)
-        self.calculate_response_time_solution2(effective_lambda1, effective_lambda2)
+        self.calculate_response_time_solution1(queue_waiting1, queue_waiting2)
+        # self.calculate_response_time_solution2(effective_lambda1, effective_lambda2)
 
         self.performance_measures.response_time = (self.performance_measures.avg_queue1 +
                                                    self.performance_measures.avg_queue2 +

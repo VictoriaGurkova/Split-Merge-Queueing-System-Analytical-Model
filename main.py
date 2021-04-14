@@ -2,6 +2,7 @@ from pprint import pprint
 
 from calculations import Calculations
 from network_params import Params
+from performance_measures_storage import PerformanceMeasuresStorage
 from states_policy import StatesPolicy
 from states_policy import get_policed_states, get_strategy
 
@@ -21,16 +22,21 @@ if __name__ == '__main__':
     states_policy = StatesPolicy(tuple(), states_with_policy, params)
     states_policy.print_adjacent_states()
 
+    storage = PerformanceMeasuresStorage()
     print()
-    for strategy in strategies[-1:]:
-    # for strategy in strategies:
+
+    for strategy in strategies:
         states_policy.strategy = strategy
         print(strategy)
         calculations = Calculations(params)
         calculations.calculate(states_policy)
         performance_measures = calculations.performance_measures
         print(performance_measures, "\n")
-    # записать в файл
-    # стратегия -> характеристики (и так для каждой страетигии)
+
+        storage.append(strategy, performance_measures)
+
+    print(storage)
+    print()
+    storage.show_difference()
 
     print("executed")
