@@ -18,7 +18,7 @@ if __name__ == '__main__':
             params.lambda1 = lam1
             params.lambda2 = lam2
             calculations = Calculations(params)
-            calculations.calculate()
+            calculations.calculate(strategy)
 
             print(f"measures for {calculations} \n{calculations.performance_measures}")
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
             params.queues_capacities = [capacity1, capacity2]
             calculations = Calculations(params)
 
-            calculations.calculate()
+            calculations.calculate(strategy)
 
             print(f"measures for {calculations} \n{calculations.performance_measures}")
 

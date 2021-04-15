@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-@dataclass()
+@dataclass
 class Params:
     mu: float
     lambda1: float
